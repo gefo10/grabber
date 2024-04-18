@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 
-
 @Service
 public class UserService {
 
@@ -17,10 +16,37 @@ public class UserService {
     public User getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
 
-        if (user.isPresent()) {
-            return user.get();
-        } else {
+        if(user.isEmpty()) {
             throw new EntityNotFoundException("User not found with id: " + id);
         }
+        return user.get();
+
     }
+
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+    public void deleteUser(User user) {
+        userRepository.delete(user);
+    }
+
+    public User getUserByUsername(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if(user.isEmpty()) {
+            throw new EntityNotFoundException("User not found with username: " + username);
+        }
+        return user.get();
+    }
+
+    public User getUserByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        
+        if(user.isEmpty()) {
+            throw new EntityNotFoundException("User not found with email: " + email);
+        }
+        return user.get();
+    }
+
 }

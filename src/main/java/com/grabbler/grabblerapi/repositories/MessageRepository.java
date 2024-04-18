@@ -1,12 +1,13 @@
 package com.grabbler.grabblerapi.repositories;
 
 import com.grabbler.grabblerapi.model.Message;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
-
+@Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    List<Message> findByMessageText(String messageText);
+    Optional<Message> findByContent(String messageText);
     Optional<Message> findById(Long id);
 }

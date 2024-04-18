@@ -6,10 +6,14 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.Optional;
 
 @Entity
 @Table(name="users")
-public class User {
+public class User implements UserDetails{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -42,6 +46,11 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<Message> messages = new HashSet<>();
+
+  
+    @Column(name="authorities")
+    private Set<GrantedAuthority>authorities = new HashSet<>();
+   
     
     
     
@@ -57,4 +66,39 @@ public class User {
         this.created_at = created_at;
     }
 
+    
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return passwordHash;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Implement your logic
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Implement your logic
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Implement your logic
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // Implement your logic
+    }
 }
