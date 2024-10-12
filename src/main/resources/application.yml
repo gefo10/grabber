@@ -2,7 +2,7 @@ spring:
   application:
     name: grabbler-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/grabbler
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:grabbler}
     username: grabbler
     password: grabbler-db-pw
     driver-class-name: org.postgresql.Driver
@@ -15,5 +15,23 @@ spring:
 
 server:
   port: 8080
+
+logging:
+  level:
+    org:
+      springframework:
+        beans: DEBUG
+        context: DEBUG
+        context.annotation: DEBUG
+        data:
+          repository: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+debug: true
 
 
