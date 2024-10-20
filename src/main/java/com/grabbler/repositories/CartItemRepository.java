@@ -17,7 +17,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     @Query("SELECT ci FROM CartItem ci WHERE ci.product.productId = ?1 And ci.cart.cartId = ?2")
     CartItem findCartItemByProductIdAndCartId(Long productId, Long cartId);
-    
 
     @Modifying
     @Transactional

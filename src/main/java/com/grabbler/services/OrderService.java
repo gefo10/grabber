@@ -3,6 +3,7 @@ package com.grabbler.services;
 import java.util.List;
 
 import com.grabbler.payloads.OrderDTO;
+import com.grabbler.payloads.OrderResponse;
 
 public interface OrderService {
 
@@ -12,7 +13,7 @@ public interface OrderService {
 
     List<OrderDTO> getOrdersByUser(String emailId);
 
-    //TODO : Get all Orders
+    OrderResponse getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
     
     OrderDTO updateOrder(String emailId, Long orderId, String orderStatus);
 }

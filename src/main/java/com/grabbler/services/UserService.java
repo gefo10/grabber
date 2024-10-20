@@ -1,11 +1,12 @@
 package com.grabbler.services;
 
 import com.grabbler.payloads.UserDTO;
+import com.grabbler.payloads.UserResponse;
 
 public interface UserService {
     UserDTO registerUser(UserDTO userDTO);
 
-    //TODO: Get all users 
+    UserResponse getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
     
     UserDTO getUserById(Long userId);
 

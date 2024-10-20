@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.grabbler.payloads.CartDTO;
 
-public interface CartService { 
+public interface CartService {
     CartDTO addProductToCart(Long cartId, Long productId, Integer quantity);
 
     List<CartDTO> getAllCarts();
@@ -15,5 +15,5 @@ public interface CartService {
 
     void updateProductInCart(Long cartId, Long productId);
 
-    void deleteProductFromCart(Long cartId, Long productId);
+    String deleteProductFromCart(Long cartId, Long productId);
 }
