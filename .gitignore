@@ -1,0 +1,19 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# IDEs / editors
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+*.swp
+
+# Common logs & env
+*.log
+logs/
+.env
+.env.*       # e.g. .env.local, .env.development
+

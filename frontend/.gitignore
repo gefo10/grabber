@@ -1,0 +1,26 @@
+# deps
+node_modules/
+
+# builds & caches
+build/
+dist/
+.cache/
+.parcel-cache/
+.eslintcache
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# env (keep only examples in git)
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.local
+
