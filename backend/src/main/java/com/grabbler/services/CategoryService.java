@@ -6,6 +6,10 @@ import com.grabbler.payloads.CategoryResponse;
 
 public interface CategoryService {
 
+    CategoryDTO getCategoryById(Long categoryId);
+
+    Category findCategoryById(Long categoryId);
+
     CategoryDTO createCategory(Category category);
 
     CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);

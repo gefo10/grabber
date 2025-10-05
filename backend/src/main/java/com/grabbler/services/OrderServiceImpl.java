@@ -3,6 +3,7 @@ package com.grabbler.services;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 
+import com.grabbler.enums.OrderStatus;
 import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Cart;
@@ -19,26 +22,18 @@ import com.grabbler.models.Order;
 import com.grabbler.models.OrderItem;
 import com.grabbler.models.Payment;
 import com.grabbler.models.Product;
+import com.grabbler.models.User;
 import com.grabbler.payloads.OrderDTO;
 import com.grabbler.payloads.OrderItemDTO;
 import com.grabbler.payloads.OrderResponse;
-import com.grabbler.repositories.CartRepository;
+import com.grabbler.payloads.PaymentDTO;
 import com.grabbler.repositories.OrderItemRepository;
 import com.grabbler.repositories.OrderRepository;
-import com.grabbler.repositories.PaymentRepository;
-import com.grabbler.repositories.ProductRepository;
-import com.grabbler.repositories.UserRepository;
 
+import jakarta.transaction.Transactional;
+
+@Service
 public class OrderServiceImpl implements OrderService {
-
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -47,35 +42,40 @@ public class OrderServiceImpl implements OrderService {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
     private CartService cartService;
 
     @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Override
-    public OrderDTO placeOrder(String emailId, Long cartId, String paymentMethod) {
-        Cart cart = cartRepository.findCartByEmailAndCartId(emailId, cartId);
-        if (cart == null) {
+    @Transactional
+    public OrderDTO placeOrder(Long userId, Long cartId, PaymentDTO paymentDTO) {
+        Optional<Cart> cart_Optional = cartService.findByCartId(cartId);
+
+        if (cart_Optional.isEmpty()) {
             throw new ResourceNotFoundException("Cart", "cartId", cartId);
         }
 
+        Cart cart = cart_Optional.get();
+
         Order order = new Order();
-        order.setEmail(emailId);
+        Optional<User> user_Optional = userService.findUserById(userId);
+        if (user_Optional.isEmpty()) {
+            throw new ResourceNotFoundException("User", "userId", userId);
+        }
+        order.setUser(user_Optional.get());
         order.setOrderDate(LocalDate.now());
 
         order.setTotalAmount(cart.getTotalPrice());
         order.setOrderStatus("Order accepted!");
 
-        Payment payment = new Payment();
-        payment.setPaymentMethod(paymentMethod);
-
-        payment = paymentRepository.save(payment);
+        Payment payment = paymentService.processPayment(paymentDTO);
 
         order.setPayment(payment);
 
@@ -132,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDTO> getOrdersByUser(String emailId) {
-        List<Order> orders = orderRepository.findAllByEmail(emailId);
+        List<Order> orders = orderRepository.findAllByUserEmail(emailId);
         List<OrderDTO> orderDTOs = orders.stream().map(order -> modelMapper.map(order, OrderDTO.class))
                 .toList();
         if (orderDTOs.size() == 0) {
@@ -181,6 +181,19 @@ public class OrderServiceImpl implements OrderService {
         OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
 
         return orderDTO;
+    }
+
+    @Override
+    public boolean updateOrderStatus(Long orderId, OrderStatus orderStatus) {
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (orderOpt.isPresent()) {
+            Order order = orderOpt.get();
+            order.setOrderStatus(orderStatus.toString());
+            orderRepository.save(order);
+            return true;
+        } else {
+            throw new ResourceNotFoundException("Order", "orderId", orderId);
+        }
     }
 
 }

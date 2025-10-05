@@ -26,4 +26,8 @@ public interface ProductService {
 
     String deleteProduct(Long productId);
 
+    Product getProductById(Long productId);
+
+    boolean decreaseProductQuantity(Long productId, Integer quantity);
+
 }

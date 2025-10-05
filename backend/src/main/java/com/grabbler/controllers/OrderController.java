@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.grabbler.enums.PaymentMethod;
 import com.grabbler.payloads.OrderDTO;
 import com.grabbler.payloads.OrderResponse;
+import com.grabbler.payloads.PaymentDTO;
 import com.grabbler.services.OrderService;
 
 @RestController
@@ -23,10 +26,12 @@ public class OrderController {
     @Autowired
     public OrderService orderService;
 
-    @PostMapping("/public/users/{emailId}/carts/{cartId}/payments/{paymentId}/order")
-    public ResponseEntity<OrderDTO> orderProducts(@PathVariable String emailId, @PathVariable Long cartId,
-            @PathVariable String paymentMethod) {
-        OrderDTO orderDTO = orderService.placeOrder(emailId, cartId, paymentMethod);
+    @PostMapping("/public/users/{userId}/carts/{cartId}/placeOrder")
+    public ResponseEntity<OrderDTO> orderProducts(
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
+            @RequestBody PaymentDTO paymnetDTO) {
+        OrderDTO orderDTO = orderService.placeOrder(userId, cartId, paymnetDTO);
 
         return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.CREATED);
     }

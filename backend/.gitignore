@@ -22,7 +22,6 @@ application-*.properties
 .gradle/
 .gradle-cache/
 gradle-app.settings
-
 # Coverage / reports
 coverage/
 jacoco.exec

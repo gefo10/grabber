@@ -1,7 +1,9 @@
 package com.grabbler.services;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.grabbler.models.Cart;
 import com.grabbler.payloads.CartDTO;
 
 public interface CartService {
@@ -16,4 +18,8 @@ public interface CartService {
     void updateProductInCart(Long cartId, Long productId);
 
     String deleteProductFromCart(Long cartId, Long productId);
+
+    Optional<Cart> findCartByEmail(String email);
+
+    Optional<Cart> findByCartId(Long cartId);
 }

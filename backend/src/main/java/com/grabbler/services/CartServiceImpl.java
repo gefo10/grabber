@@ -1,10 +1,12 @@
 package com.grabbler.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
@@ -15,15 +17,17 @@ import com.grabbler.payloads.CartDTO;
 import com.grabbler.payloads.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
-import com.grabbler.repositories.ProductRepository;
 
+import jakarta.transaction.Transactional;
+
+@Service
 public class CartServiceImpl implements CartService {
 
     @Autowired
     private CartRepository cartRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
     @Autowired
     private CartItemRepository cartItemRepository;
@@ -32,16 +36,16 @@ public class CartServiceImpl implements CartService {
     private ModelMapper modelMapper;
 
     @Override
+    @Transactional
     public CartDTO addProductToCart(Long cartId, Long productId, Integer quantity) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+        Product product = productService.getProductById(productId);
 
         CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
 
-        if (cartItem == null) {
+        if (cartItem != null) {
             throw new APIException("Product" + productId + " already exists in the cart");
         }
 
@@ -100,11 +104,13 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO getCart(String email, Long cartId) {
-        Cart cart = cartRepository.findCartByEmailAndCartId(email, cartId);
+        Optional<Cart> cart_Optional = cartRepository.findCartByEmailAndCartId(email, cartId);
 
-        if (cart == null) {
+        if (cart_Optional.isEmpty()) {
             throw new ResourceNotFoundException("Cart", "cartId", cartId);
         }
+
+        Cart cart = cart_Optional.get();
 
         CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
         List<ProductDTO> productDTOs = cart.getCartItems().stream()
@@ -117,14 +123,14 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public CartDTO updateProductQuantityInCart(Long cartId, Long productId,
             Integer quantity) {
 
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+        Product product = productService.getProductById(productId);
 
         CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
 
@@ -159,8 +165,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+        Product product = productService.getProductById(productId);
 
         CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
 
@@ -178,6 +183,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public String deleteProductFromCart(Long cartId, Long productId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
@@ -197,6 +203,16 @@ public class CartServiceImpl implements CartService {
         cartItemRepository.deleteCartItemByProductIdAndCartId(productId, cartId);
 
         return "Product" + product.getProductName() + " deleted from the cart";
+    }
+
+    @Override
+    public Optional<Cart> findCartByEmail(String email) {
+        return cartRepository.findCartByUserEmail(email);
+    }
+
+    @Override
+    public Optional<Cart> findByCartId(Long cartId) {
+        return cartRepository.findById(cartId);
     }
 
 }

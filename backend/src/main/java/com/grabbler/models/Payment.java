@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,11 +26,13 @@ import lombok.NoArgsConstructor;
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long paymentId;
+    private Long transactionId;
 
     @NotBlank
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    @NotNull(message = "Payment token cannot be null")
     private String paymentToken;
 
     @Enumerated(EnumType.STRING)

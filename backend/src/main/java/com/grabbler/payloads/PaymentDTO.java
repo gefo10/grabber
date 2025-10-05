@@ -3,6 +3,7 @@ package com.grabbler.payloads;
 import com.grabbler.enums.PaymentMethod;
 import com.grabbler.enums.PaymentStatus;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentDTO {
-    private Long paymentId;
+    @NotNull(message = "Payment method is required")
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
+
+    @NotNull(message = "Payment token is required")
+    private String paymentToken;
 
 }

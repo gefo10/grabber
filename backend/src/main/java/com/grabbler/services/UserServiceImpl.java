@@ -1,6 +1,7 @@
 package com.grabbler.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -9,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 
 import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
@@ -26,6 +28,9 @@ import com.grabbler.repositories.AddressRepository;
 import com.grabbler.repositories.RoleRepository;
 import com.grabbler.repositories.UserRepository;
 
+import jakarta.transaction.Transactional;
+
+@Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -47,6 +52,7 @@ public class UserServiceImpl implements UserService {
     // private PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public UserDTO registerUser(UserDTO userDTO) {
         try {
             User user = modelMapper.map(userDTO, User.class);
@@ -203,6 +209,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public String deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
@@ -217,6 +224,16 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         return "User deleted successfully";
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findUserById(Long userId) {
+        return userRepository.findById(userId);
     }
 
 }

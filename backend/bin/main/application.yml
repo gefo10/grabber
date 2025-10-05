@@ -23,15 +23,16 @@ logging:
         beans: DEBUG
         context: DEBUG
         context.annotation: DEBUG
-        data:
-          repository: DEBUG
+        data: DEBUG
       hibernate:
         SQL: DEBUG
         type:
           descriptor:
-            sql:
-              BasicBinder: TRACE
+            sql: TRACE
 
 debug: true
+
+product:
+  image: 'src/main/resources/static/images'
 
 
