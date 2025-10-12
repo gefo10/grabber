@@ -1,6 +1,5 @@
-package com.grabbler.grabblerapi;
+package com.grabbler;
 
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
