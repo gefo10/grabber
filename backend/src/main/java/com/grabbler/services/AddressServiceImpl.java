@@ -1,6 +1,7 @@
 package com.grabbler.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,11 +40,12 @@ public class AddressServiceImpl implements AddressService {
         // String additionalInfo = addressDTO.getAdditionalInfo();
         String plz = addressDTO.getPlz();
 
-        Address addressFromDb = addressRepository.findByCountryAndCityAndPlzAndAddressLineOne(country, city, plz,
+        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+                city, plz,
                 addressLineOne);
 
-        if (addressFromDb != null) {
-            throw new APIException("Address already exists with addressId: " + addressFromDb.getAddressId());
+        if (addressFromDb.isPresent()) {
+            throw new APIException("Address already exists with addressId: " + addressFromDb.get().getAddressId());
         }
 
         Address address = modelMapper.map(addressDTO, Address.class);
@@ -71,25 +73,31 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public AddressDTO updateAddress(Long addressId, Address address) {
-        Address addressFromDb = addressRepository.findByCountryAndCityAndPlzAndAddressLineOne(address.getCountry(),
-                address.getCity(), address.getPlz(), address.getAddressLineOne());
+        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(
+                address.getCountry(),
+                address.getCity(), address.getPostalCode(), address.getAddressLineOne());
 
-        if (addressFromDb == null) {
-            addressFromDb = addressRepository.findById(addressId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+        if (addressFromDb.isEmpty() || addressFromDb.get().getAddressId().equals(addressId)) {
+            addressFromDb = addressRepository.findById(addressId);
 
-            addressFromDb.setCountry(address.getCountry());
-            addressFromDb.setCity(address.getCity());
-            addressFromDb.setPlz(address.getPlz());
-            addressFromDb.setAddressLineOne(address.getAddressLineOne());
-            addressFromDb.setAddressLineTwo(address.getAddressLineTwo());
-            addressFromDb.setAdditionalInfo(address.getAdditionalInfo());
+            if (addressFromDb.isEmpty()) {
+                throw new ResourceNotFoundException("Address", "addressId", addressId);
+            }
 
-            Address updatedAddress = addressRepository.save(addressFromDb);
+            Address addressToUpdate = addressFromDb.get();
+
+            addressToUpdate.setCountry(address.getCountry());
+            addressToUpdate.setCity(address.getCity());
+            addressToUpdate.setPostalCode(address.getPostalCode());
+            addressToUpdate.setAddressLineOne(address.getAddressLineOne());
+            // addressFromDb.setAddressLineTwo(address.getAddressLineTwo());
+            addressToUpdate.setAdditionalInfo(address.getAdditionalInfo());
+
+            Address updatedAddress = addressRepository.save(addressToUpdate);
             return modelMapper.map(updatedAddress, AddressDTO.class);
         } else {
-            List<User> users = userRepository.findByAddress(addressFromDb.getAddressId());
-            final Address a = addressFromDb;
+            List<User> users = userRepository.findByAddress(addressFromDb.get().getAddressId());
+            final Address a = addressFromDb.get();
 
             users.forEach(user -> {
                 user.getAddresses().add(a);

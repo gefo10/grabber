@@ -68,20 +68,23 @@ public class UserServiceImpl implements UserService {
             String plz = userDTO.getAddress().getPlz();
             String addressLineOne = userDTO.getAddress().getAddressLineOne();
 
-            Address address = addressRepository.findByCountryAndCityAndPlzAndAddressLineOne(country, city, plz,
+            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+                    city, plz,
                     addressLineOne);
 
-            if (address == null) {
-                address = new Address();
-                address.setCountry(country);
-                address.setCity(city);
-                address.setPlz(plz);
-                address.setAddressLineOne(addressLineOne);
+            Address addressEntity = null;
 
-                address = addressRepository.save(address);
+            if (address.isEmpty()) {
+                addressEntity = new Address();
+                addressEntity.setCountry(country);
+                addressEntity.setCity(city);
+                addressEntity.setPostalCode(plz);
+                addressEntity.setAddressLineOne(addressLineOne);
+
+                addressEntity = addressRepository.save(addressEntity);
             }
 
-            user.setAddresses(List.of(address));
+            user.setAddresses(List.of(addressEntity));
 
             User registeredUser = userRepository.save(user);
             cart.setUser(registeredUser);
@@ -176,20 +179,23 @@ public class UserServiceImpl implements UserService {
             String plz = userDTO.getAddress().getPlz();
             String addressLineOne = userDTO.getAddress().getAddressLineOne();
 
-            Address address = addressRepository.findByCountryAndCityAndPlzAndAddressLineOne(country, city, plz,
+            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+                    city, plz,
                     addressLineOne);
 
-            if (address == null) {
-                address = new Address();
-                address.setCountry(country);
-                address.setCity(city);
-                address.setPlz(plz);
-                address.setAddressLineOne(addressLineOne);
+            Address addressEntity = null;
 
-                address = addressRepository.save(address);
+            if (address.isEmpty()) {
+                addressEntity = new Address();
+                addressEntity.setCountry(country);
+                addressEntity.setCity(city);
+                addressEntity.setPostalCode(plz);
+                addressEntity.setAddressLineOne(addressLineOne);
+
+                addressEntity = addressRepository.save(addressEntity);
             }
 
-            user.setAddresses(List.of(address));
+            user.setAddresses(List.of(addressEntity));
         }
 
         userDTO = modelMapper.map(user, UserDTO.class);

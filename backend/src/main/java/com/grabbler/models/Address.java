@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @Table(name = "addresses")
-@AllArgsConstructor 
+@AllArgsConstructor
 @NoArgsConstructor
 public class Address {
     @Id
@@ -26,7 +26,7 @@ public class Address {
 
     @NotBlank
     private String addressLineOne;
-    private String addressLineTwo;
+    // private String addressLineTwo;
     private String additionalInfo;
 
     @NotBlank
@@ -36,10 +36,17 @@ public class Address {
     private String country;
 
     @NotBlank
-    private String plz;
+    private String postalCode;
 
     @ManyToMany(mappedBy = "addresses")
     private List<User> users = new ArrayList<>();
 
+    public Address(String country, String city, String plz, String addressLineOne, String addressLineTwo) {
+        this.country = country;
+        this.city = city;
+        this.postalCode = plz;
+        this.addressLineOne = addressLineOne;
+        // this.addressLineTwo = addressLineTwo;
+    }
 
 }

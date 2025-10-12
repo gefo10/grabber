@@ -28,6 +28,9 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    
+    testImplementation 'com.h2database:h2' 
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
@@ -37,6 +40,15 @@ dependencies {
     //testImplementation 'org.springframework.security:spring-security-test'
 
 }
+
+testing {
+  suites {
+    test {
+      useJUnitJupiter()
+    }
+  }
+}
+
 
 tasks.named('test') {
 	useJUnitPlatform()

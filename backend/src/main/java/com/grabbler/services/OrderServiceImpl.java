@@ -51,6 +51,9 @@ public class OrderServiceImpl implements OrderService {
     private PaymentService paymentService;
 
     @Autowired
+    private ProductService productService;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Override
@@ -106,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
             int quantity = item.getQuantity();
             Product product = item.getProduct();
             cartService.deleteProductFromCart(cartId, item.getProduct().getProductId());
-            product.setQuantity(product.getQuantity() - quantity);
+            productService.decreaseProductQuantity(product.getProductId(), quantity);
         });
 
         OrderDTO orderDTO = modelMapper.map(savedOrder, OrderDTO.class);

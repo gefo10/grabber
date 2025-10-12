@@ -11,10 +11,12 @@ import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+    @Query("SELECT p FROM Product p WHERE p.productName LIKE %?1%")
     Page<Product> findByProductNameLike(String keyword, Pageable pageDetails);
 
     Page<Product> findAll(Pageable pageDetails);
 
+    @Query("SELECT p FROM Product p WHERE p.category.categoryId = ?1")
     Page<Product> findByCategoryCategoryId(Long categoryId, Pageable pageDetails);
 
     @Query("SELECT p FROM Product p WHERE p.productName LIKE %:keyword% OR p.description LIKE %:keyword%")

@@ -23,7 +23,7 @@ public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long category_id;
+    private Long categoryId;
 
     @NotBlank
     @Size(min = 6, message = "Category name must be at least 6 characters long")

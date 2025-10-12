@@ -7,11 +7,13 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.grabbler.models.Payment;
+import com.grabbler.models.Order;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    Optional<Payment> findByTransactionId(String transactionId);
+    Optional<Payment> findByTransactionId(Long transactionId);
 
-    List<Payment> findByUserId(Long userId);
+    List<Payment> findByOrder(Order order);
+
 }

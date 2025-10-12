@@ -93,7 +93,7 @@ public class OrderServiceTest {
         orderService.placeOrder(user.getUserId(), cart.getCartId(), paymentDTO);
 
         // Verify that the necessary methods were called exactly once
-        verify(cartService, times(1)).findCartByEmail(user.getEmail());
+        verify(cartService, times(1)).findByCartId(cart.getCartId());
         verify(paymentService, times(1)).processPayment(paymentDTO);
         verify(orderRepository, times(1)).save(any(Order.class));
         verify(productService, times(1)).decreaseProductQuantity(any(Long.class), any(Integer.class));
