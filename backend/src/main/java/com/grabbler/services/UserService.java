@@ -3,11 +3,11 @@ package com.grabbler.services;
 import java.util.Optional;
 
 import com.grabbler.models.User;
-import com.grabbler.payloads.UserDTO;
-import com.grabbler.payloads.UserResponse;
+import com.grabbler.payloads.user.*;
+import com.grabbler.payloads.user.UserCreateDTO;
 
 public interface UserService {
-    UserDTO registerUser(UserDTO userDTO);
+    UserDTO registerUser(UserCreateDTO userCreateDTO);
 
     UserResponse getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 

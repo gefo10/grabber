@@ -19,11 +19,10 @@ import com.grabbler.models.Cart;
 import com.grabbler.models.CartItem;
 import com.grabbler.models.Role;
 import com.grabbler.models.User;
-import com.grabbler.payloads.AddressDTO;
-import com.grabbler.payloads.CartDTO;
-import com.grabbler.payloads.ProductDTO;
-import com.grabbler.payloads.UserDTO;
-import com.grabbler.payloads.UserResponse;
+import com.grabbler.payloads.address.*;
+import com.grabbler.payloads.user.*;
+import com.grabbler.payloads.cart.*;
+import com.grabbler.payloads.product.*;
 import com.grabbler.repositories.AddressRepository;
 import com.grabbler.repositories.RoleRepository;
 import com.grabbler.repositories.UserRepository;
@@ -53,9 +52,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO registerUser(UserDTO userDTO) {
+    public UserDTO registerUser(UserCreateDTO userCreateDTO) {
         try {
-            User user = modelMapper.map(userDTO, User.class);
+            User user = modelMapper.map(userCreateDTO, User.class);
 
             Cart cart = new Cart();
             user.setCart(cart);
@@ -63,10 +62,11 @@ public class UserServiceImpl implements UserService {
             Role role = roleRepository.findById(102L).get();
             user.getRoles().add(role);
 
-            String country = userDTO.getAddress().getCountry();
-            String city = userDTO.getAddress().getCity();
-            String plz = userDTO.getAddress().getPlz();
-            String addressLineOne = userDTO.getAddress().getAddressLineOne();
+            AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
+            String country = userCr.getCountry();
+            String city = userCr.getCity();
+            String plz = userCr.getPlz();
+            String addressLineOne = userCr.getAddressLineOne();
 
             Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
                     city, plz,
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
             User registeredUser = userRepository.save(user);
             cart.setUser(registeredUser);
 
-            userDTO = modelMapper.map(registeredUser, UserDTO.class);
+            UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
             userDTO.setAddress(
                     modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
 
