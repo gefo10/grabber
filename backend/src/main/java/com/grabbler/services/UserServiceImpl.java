@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
             Cart cart = new Cart();
             user.setCart(cart);
 
-            Role role = roleRepository.findById(102L).get();
+            Role role = roleRepository.findByRoleName("ROLE_CUSTOMER").get();
             user.getRoles().add(role);
 
             AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
