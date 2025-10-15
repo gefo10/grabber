@@ -53,50 +53,46 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO registerUser(UserCreateDTO userCreateDTO) {
-        try {
-            User user = modelMapper.map(userCreateDTO, User.class);
+        User user = modelMapper.map(userCreateDTO, User.class);
 
-            Cart cart = new Cart();
-            user.setCart(cart);
+        Cart cart = new Cart();
+        user.setCart(cart);
 
-            Role role = roleRepository.findByRoleName("ROLE_CUSTOMER").get();
-            user.getRoles().add(role);
+        Role role = roleRepository.findByRoleName("ROLE_CUSTOMER").get();
+        user.getRoles().add(role);
 
-            AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
-            String country = userCr.getCountry();
-            String city = userCr.getCity();
-            String plz = userCr.getPlz();
-            String addressLineOne = userCr.getAddressLineOne();
+        AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
+        String country = userCr.getCountry();
+        String city = userCr.getCity();
+        String plz = userCr.getPostalCode();
+        String addressLineOne = userCr.getAddressLineOne();
 
-            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
-                    city, plz,
-                    addressLineOne);
+        Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+                city, plz,
+                addressLineOne);
 
-            Address addressEntity = null;
+        Address addressEntity = null;
 
-            if (address.isEmpty()) {
-                addressEntity = new Address();
-                addressEntity.setCountry(country);
-                addressEntity.setCity(city);
-                addressEntity.setPostalCode(plz);
-                addressEntity.setAddressLineOne(addressLineOne);
+        if (address.isEmpty()) {
+            addressEntity = new Address();
+            addressEntity.setCountry(country);
+            addressEntity.setCity(city);
+            addressEntity.setPostalCode(plz);
+            addressEntity.setAddressLineOne(addressLineOne);
 
-                addressEntity = addressRepository.save(addressEntity);
-            }
-
-            user.setAddresses(List.of(addressEntity));
-
-            User registeredUser = userRepository.save(user);
-            cart.setUser(registeredUser);
-
-            UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
-            userDTO.setAddress(
-                    modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
-
-            return userDTO;
-        } catch (DataIntegrityViolationException e) {
-            throw new APIException("User already exists");
+            addressEntity = addressRepository.save(addressEntity);
         }
+
+        user.setAddresses(List.of(addressEntity));
+
+        User registeredUser = userRepository.save(user);
+        cart.setUser(registeredUser);
+
+        UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
+        userDTO.setAddress(
+                modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
+
+        return userDTO;
     }
 
     @Override
@@ -176,7 +172,7 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getAddress() != null) {
             String country = userDTO.getAddress().getCountry();
             String city = userDTO.getAddress().getCity();
-            String plz = userDTO.getAddress().getPlz();
+            String plz = userDTO.getAddress().getPostalCode();
             String addressLineOne = userDTO.getAddress().getAddressLineOne();
 
             Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,

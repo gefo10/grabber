@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import com.grabbler.repositories.*;
+
+import jakarta.transaction.Transactional;
+
 import com.grabbler.models.*;
 
 @SpringBootApplication
@@ -23,6 +26,7 @@ public class GrabblerApiApplication implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         final String ADMIN_ROLE = "ROLE_ADMIN";
         final String USER_ROLE = "ROLE_CUSTOMER";

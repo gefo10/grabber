@@ -14,11 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.grabbler.enums.PaymentMethod;
-import com.grabbler.payloads.OrderDTO;
-import com.grabbler.payloads.OrderResponse;
-import com.grabbler.payloads.PaymentDTO;
+import com.grabbler.payloads.order.*;
+import com.grabbler.payloads.payment.*;
 import com.grabbler.services.OrderService;
+import com.grabbler.enums.OrderStatus;
 
 @RestController
 @RequestMapping("/api")
@@ -63,7 +62,7 @@ public class OrderController {
     @PutMapping("/admin/users/{emailId}/orders/{orderId}/orderStatus/{orderStatus}")
     public ResponseEntity<OrderDTO> updateOrderByUser(@PathVariable String emailId, @PathVariable Long orderId,
             @PathVariable String orderStatus) {
-        OrderDTO orderDTO = orderService.updateOrder(emailId, orderId, orderStatus);
+        OrderDTO orderDTO = orderService.updateOrder(emailId, orderId, OrderStatus.valueOf(orderStatus));
         return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.OK);
     }
 

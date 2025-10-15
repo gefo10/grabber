@@ -10,7 +10,7 @@ import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Address;
 import com.grabbler.models.User;
-import com.grabbler.payloads.AddressDTO;
+import com.grabbler.payloads.address.*;
 import com.grabbler.repositories.AddressRepository;
 import com.grabbler.repositories.UserRepository;
 
@@ -38,7 +38,7 @@ public class AddressServiceImpl implements AddressService {
         String addressLineOne = addressDTO.getAddressLineOne();
         // String addressLineTwo = addressDTO.getAddressLineTwo();
         // String additionalInfo = addressDTO.getAdditionalInfo();
-        String plz = addressDTO.getPlz();
+        String plz = addressDTO.getPostalCode();
 
         Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
                 city, plz,

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grabbler.models.Address;
-import com.grabbler.payloads.AddressDTO;
+import com.grabbler.payloads.address.*;
 import com.grabbler.services.AddressService;
 
 import jakarta.validation.Valid;

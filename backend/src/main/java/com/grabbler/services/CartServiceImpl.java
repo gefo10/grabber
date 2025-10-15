@@ -13,8 +13,8 @@ import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Cart;
 import com.grabbler.models.CartItem;
 import com.grabbler.models.Product;
-import com.grabbler.payloads.CartDTO;
-import com.grabbler.payloads.ProductDTO;
+import com.grabbler.payloads.cart.*;
+import com.grabbler.payloads.product.*;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
 

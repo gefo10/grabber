@@ -6,10 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.grabbler.enums.PaymentStatus;
+import com.grabbler.models.Order;
 import com.grabbler.models.Payment;
-import com.grabbler.payloads.PaymentDTO;
+import com.grabbler.payloads.payment.*;
 import com.grabbler.repositories.PaymentRepository;
-
+import com.grabbler.repositories.OrderRepository;
 import jakarta.transaction.Transactional;
 
 import com.grabbler.enums.OrderStatus;
@@ -21,7 +22,7 @@ public class PaymentServiceImpl implements PaymentService {
     private PaymentRepository paymentRepository;
 
     @Autowired
-    private OrderService orderService;
+    private OrderRepository orderRepository;
 
     @Override
     public Payment processPayment(PaymentDTO paymentDetails) {
@@ -87,9 +88,13 @@ public class PaymentServiceImpl implements PaymentService {
             existingPayment.setPaymentStatus(PaymentStatus.REFUNDED);
             Payment refundedPayment = paymentRepository.save(existingPayment);
 
-            return orderService.updateOrderStatus(
-                    refundedPayment.getOrder().getOrderId(),
-                    OrderStatus.valueOf("REFUNDED"));
+            Long orderId = refundedPayment.getOrder().getOrderId();
+            orderRepository.findById(orderId).ifPresent(order -> {
+                order.setOrderStatus(OrderStatus.REFUNDED);
+                orderRepository.save(order);
+            });
+
+            return true;
 
         } else {
             throw new RuntimeException("Payment not found with id: " + paymentId);

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.grabbler.models.Cart;
-import com.grabbler.payloads.CartDTO;
+import com.grabbler.payloads.cart.*;
 
 public interface CartService {
     CartDTO addProductToCart(Long cartId, Long productId, Integer quantity);
