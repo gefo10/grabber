@@ -5,8 +5,7 @@ import java.io.IOException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.grabbler.models.Product;
-import com.grabbler.payloads.ProductDTO;
-import com.grabbler.payloads.ProductResponse;
+import com.grabbler.payloads.product.*;
 
 public interface ProductService {
 

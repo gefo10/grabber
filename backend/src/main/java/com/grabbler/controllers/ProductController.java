@@ -1,7 +1,6 @@
 package com.grabbler.controllers;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,9 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.grabbler.models.Product;
-import com.grabbler.payloads.CategoryResponse;
-import com.grabbler.payloads.ProductDTO;
-import com.grabbler.payloads.ProductResponse;
+import com.grabbler.payloads.product.*;
 import com.grabbler.services.ProductService;
 
 import jakarta.validation.Valid;

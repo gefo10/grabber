@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grabbler.models.Category;
-import com.grabbler.payloads.CategoryDTO;
-import com.grabbler.payloads.CategoryResponse;
+import com.grabbler.payloads.category.*;
 import com.grabbler.services.CategoryService;
 
 import jakarta.validation.Valid;

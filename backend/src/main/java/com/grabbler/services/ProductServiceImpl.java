@@ -17,8 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.grabbler.models.Category;
 import com.grabbler.models.Product;
-import com.grabbler.payloads.ProductDTO;
-import com.grabbler.payloads.ProductResponse;
+import com.grabbler.payloads.product.*;
 import com.grabbler.repositories.ProductRepository;
 
 @Service

@@ -17,13 +17,13 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
               WHERE a.country = :country
                 AND a.city = :city
                 AND a.postalCode = :postalCode
-                AND a.addressLineOne = :addressLineOne
+                AND a.street = :street
             """)
-    Optional<Address> findByCountryAndCityAndPostalCodeAndAddressLineOne(
+    Optional<Address> findByCountryAndCityAndPostalCodeAndStreet(
             @Param("country") String country,
             @Param("city") String city,
             @Param("postalCode") String postalCode,
-            @Param("addressLineOne") String addressLineOne);
+            @Param("street") String street);
 
     List<Address> findByCity(String city);
 }

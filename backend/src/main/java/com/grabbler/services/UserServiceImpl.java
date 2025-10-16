@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.grabbler.exceptions.APIException;
@@ -47,56 +48,53 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    // @Autowired
-    // private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserDTO registerUser(UserCreateDTO userCreateDTO) {
-        try {
-            User user = modelMapper.map(userCreateDTO, User.class);
+        User user = modelMapper.map(userCreateDTO, User.class);
 
-            Cart cart = new Cart();
-            user.setCart(cart);
+        Cart cart = new Cart();
+        user.setCart(cart);
 
-            Role role = roleRepository.findById(102L).get();
-            user.getRoles().add(role);
+        Role role = roleRepository.findByRoleName("ROLE_CUSTOMER").get();
+        user.getRoles().add(role);
 
-            AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
-            String country = userCr.getCountry();
-            String city = userCr.getCity();
-            String plz = userCr.getPlz();
-            String addressLineOne = userCr.getAddressLineOne();
+        AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
+        String country = userCr.getCountry();
+        String city = userCr.getCity();
+        String plz = userCr.getPostalCode();
+        String street = userCr.getStreet();
 
-            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
-                    city, plz,
-                    addressLineOne);
+        Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndStreet(country,
+                city, plz,
+                street);
 
-            Address addressEntity = null;
+        Address addressEntity = null;
 
-            if (address.isEmpty()) {
-                addressEntity = new Address();
-                addressEntity.setCountry(country);
-                addressEntity.setCity(city);
-                addressEntity.setPostalCode(plz);
-                addressEntity.setAddressLineOne(addressLineOne);
+        if (address.isEmpty()) {
+            addressEntity = new Address();
+            addressEntity.setCountry(country);
+            addressEntity.setCity(city);
+            addressEntity.setPostalCode(plz);
+            addressEntity.setStreet(street);
 
-                addressEntity = addressRepository.save(addressEntity);
-            }
-
-            user.setAddresses(List.of(addressEntity));
-
-            User registeredUser = userRepository.save(user);
-            cart.setUser(registeredUser);
-
-            UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
-            userDTO.setAddress(
-                    modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
-
-            return userDTO;
-        } catch (DataIntegrityViolationException e) {
-            throw new APIException("User already exists");
+            addressEntity = addressRepository.save(addressEntity);
         }
+
+        user.setAddresses(List.of(addressEntity));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        User registeredUser = userRepository.save(user);
+        cart.setUser(registeredUser);
+
+        UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
+        userDTO.setAddress(
+                modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
+
+        return userDTO;
     }
 
     @Override
@@ -176,12 +174,12 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getAddress() != null) {
             String country = userDTO.getAddress().getCountry();
             String city = userDTO.getAddress().getCity();
-            String plz = userDTO.getAddress().getPlz();
-            String addressLineOne = userDTO.getAddress().getAddressLineOne();
+            String plz = userDTO.getAddress().getPostalCode();
+            String street = userDTO.getAddress().getStreet();
 
-            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+            Optional<Address> address = addressRepository.findByCountryAndCityAndPostalCodeAndStreet(country,
                     city, plz,
-                    addressLineOne);
+                    street);
 
             Address addressEntity = null;
 
@@ -190,7 +188,7 @@ public class UserServiceImpl implements UserService {
                 addressEntity.setCountry(country);
                 addressEntity.setCity(city);
                 addressEntity.setPostalCode(plz);
-                addressEntity.setAddressLineOne(addressLineOne);
+                addressEntity.setStreet(street);
 
                 addressEntity = addressRepository.save(addressEntity);
             }

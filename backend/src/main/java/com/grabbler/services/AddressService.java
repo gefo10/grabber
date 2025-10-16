@@ -3,7 +3,7 @@ package com.grabbler.services;
 import java.util.List;
 
 import com.grabbler.models.Address;
-import com.grabbler.payloads.AddressDTO;
+import com.grabbler.payloads.address.*;
 
 public interface AddressService {
     AddressDTO createAddress(AddressDTO addressDTO);
