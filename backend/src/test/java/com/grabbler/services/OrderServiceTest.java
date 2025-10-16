@@ -1,7 +1,7 @@
 package com.grabbler.services;
 
 import com.grabbler.models.*;
-import com.grabbler.payloads.PaymentDTO;
+import com.grabbler.payloads.payment.*;
 import com.grabbler.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import com.grabbler.enums.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.grabbler.payloads.CartDTO;
+import com.grabbler.payloads.cart.*;
 import com.grabbler.services.CartService;
 
 @RestController

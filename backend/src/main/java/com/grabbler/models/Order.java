@@ -16,6 +16,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.grabbler.enums.OrderStatus;
 
 @Entity
 @Data
@@ -33,7 +34,7 @@ public class Order {
 
     private LocalDate orderDate;
     private Double totalAmount;
-    private String orderStatus;
+    private OrderStatus orderStatus;
 
     @OneToOne
     @JoinColumn(name = "payment_id")

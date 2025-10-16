@@ -25,7 +25,7 @@ public class Address {
     private Long addressId;
 
     @NotBlank
-    private String addressLineOne;
+    private String street;
     // private String addressLineTwo;
     private String additionalInfo;
 
@@ -41,11 +41,11 @@ public class Address {
     @ManyToMany(mappedBy = "addresses")
     private List<User> users = new ArrayList<>();
 
-    public Address(String country, String city, String plz, String addressLineOne, String addressLineTwo) {
+    public Address(String country, String city, String plz, String street, String addressLineTwo) {
         this.country = country;
         this.city = city;
         this.postalCode = plz;
-        this.addressLineOne = addressLineOne;
+        this.street = street;
         // this.addressLineTwo = addressLineTwo;
     }
 

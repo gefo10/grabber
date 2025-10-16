@@ -1,8 +1,7 @@
 package com.grabbler.services;
 
 import com.grabbler.models.Category;
-import com.grabbler.payloads.CategoryDTO;
-import com.grabbler.payloads.CategoryResponse;
+import com.grabbler.payloads.category.*;
 
 public interface CategoryService {
 

@@ -10,7 +10,7 @@ import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Address;
 import com.grabbler.models.User;
-import com.grabbler.payloads.AddressDTO;
+import com.grabbler.payloads.address.*;
 import com.grabbler.repositories.AddressRepository;
 import com.grabbler.repositories.UserRepository;
 
@@ -35,14 +35,14 @@ public class AddressServiceImpl implements AddressService {
     public AddressDTO createAddress(AddressDTO addressDTO) {
         String country = addressDTO.getCountry();
         String city = addressDTO.getCity();
-        String addressLineOne = addressDTO.getAddressLineOne();
+        String street = addressDTO.getStreet();
         // String addressLineTwo = addressDTO.getAddressLineTwo();
         // String additionalInfo = addressDTO.getAdditionalInfo();
-        String plz = addressDTO.getPlz();
+        String plz = addressDTO.getPostalCode();
 
-        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(country,
+        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndStreet(country,
                 city, plz,
-                addressLineOne);
+                street);
 
         if (addressFromDb.isPresent()) {
             throw new APIException("Address already exists with addressId: " + addressFromDb.get().getAddressId());
@@ -73,9 +73,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public AddressDTO updateAddress(Long addressId, Address address) {
-        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndAddressLineOne(
+        Optional<Address> addressFromDb = addressRepository.findByCountryAndCityAndPostalCodeAndStreet(
                 address.getCountry(),
-                address.getCity(), address.getPostalCode(), address.getAddressLineOne());
+                address.getCity(), address.getPostalCode(), address.getStreet());
 
         if (addressFromDb.isEmpty() || addressFromDb.get().getAddressId().equals(addressId)) {
             addressFromDb = addressRepository.findById(addressId);
@@ -89,7 +89,7 @@ public class AddressServiceImpl implements AddressService {
             addressToUpdate.setCountry(address.getCountry());
             addressToUpdate.setCity(address.getCity());
             addressToUpdate.setPostalCode(address.getPostalCode());
-            addressToUpdate.setAddressLineOne(address.getAddressLineOne());
+            addressToUpdate.setStreet(address.getStreet());
             // addressFromDb.setAddressLineTwo(address.getAddressLineTwo());
             addressToUpdate.setAdditionalInfo(address.getAdditionalInfo());
 

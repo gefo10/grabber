@@ -23,10 +23,8 @@ import com.grabbler.models.OrderItem;
 import com.grabbler.models.Payment;
 import com.grabbler.models.Product;
 import com.grabbler.models.User;
-import com.grabbler.payloads.OrderDTO;
-import com.grabbler.payloads.OrderItemDTO;
-import com.grabbler.payloads.OrderResponse;
-import com.grabbler.payloads.PaymentDTO;
+import com.grabbler.payloads.order.*;
+import com.grabbler.payloads.payment.*;
 import com.grabbler.repositories.OrderItemRepository;
 import com.grabbler.repositories.OrderRepository;
 
@@ -76,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDate.now());
 
         order.setTotalAmount(cart.getTotalPrice());
-        order.setOrderStatus("Order accepted!");
+        order.setOrderStatus(OrderStatus.valueOf("PENDING"));
 
         Payment payment = paymentService.processPayment(paymentDTO);
 
@@ -173,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO updateOrder(String emailId, Long orderId, String orderStatus) {
+    public OrderDTO updateOrder(String emailId, Long orderId, OrderStatus orderStatus) {
         Order order = orderRepository.findOrderByEmailAndOrderId(emailId, orderId);
         if (order == null) {
             throw new ResourceNotFoundException("Order", "orderId", orderId);
@@ -191,7 +189,7 @@ public class OrderServiceImpl implements OrderService {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isPresent()) {
             Order order = orderOpt.get();
-            order.setOrderStatus(orderStatus.toString());
+            order.setOrderStatus(orderStatus);
             orderRepository.save(order);
             return true;
         } else {
