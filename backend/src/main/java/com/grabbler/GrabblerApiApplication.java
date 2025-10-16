@@ -28,8 +28,8 @@ public class GrabblerApiApplication implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        final String ADMIN_ROLE = "ROLE_ADMIN";
-        final String USER_ROLE = "ROLE_CUSTOMER";
+        final String ADMIN_ROLE = "ADMIN";
+        final String USER_ROLE = "CUSTOMER";
 
         Role adminRole = roleRepository.findByRoleName(ADMIN_ROLE).orElseGet(() -> {
             Role role = new Role(null, ADMIN_ROLE);

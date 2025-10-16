@@ -33,9 +33,35 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
             error.put("error", "Database constraint violation: " + ex.getRootCause().getMessage());
+            return new ResponseEntity<>(error, HttpStatus.CONFLICT);
         } else {
             error.put("error", "Data integrity violation: " + ex.getMessage());
+            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleUserNotFoundException(UserNotFoundException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        error.put("message", "User Not Found");
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", "Resource Not Found");
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(APIException.class)
+    public ResponseEntity<Map<String, String>> handleAPIException(APIException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", "API Exception");
+        error.put("error", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 

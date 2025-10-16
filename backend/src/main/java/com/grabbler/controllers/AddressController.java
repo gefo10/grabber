@@ -20,41 +20,48 @@ import com.grabbler.services.AddressService;
 
 import jakarta.validation.Valid;
 
+//TODO: refactor the endpoints to match the REST conventions
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/v1/addresses")
 public class AddressController {
     @Autowired
     private AddressService addressService;
 
-    @PostMapping("/address")
+    @PostMapping
     public ResponseEntity<AddressDTO> createAddress(@Valid @RequestBody AddressDTO addressDTO) {
         AddressDTO address = addressService.createAddress(addressDTO);
 
         return new ResponseEntity<AddressDTO>(address, HttpStatus.CREATED);
     }
 
-    @GetMapping("/addresses")
+    @GetMapping
     public ResponseEntity<List<AddressDTO>> getAddresses() {
         List<AddressDTO> addressDTOs = addressService.getAllAddresses();
 
-        return new ResponseEntity<List<AddressDTO>>(addressDTOs, HttpStatus.FOUND);
+        return new ResponseEntity<List<AddressDTO>>(addressDTOs, HttpStatus.OK);
     }
 
-    @GetMapping("/address/{addressId}")
+    @GetMapping("/{addressId}")
     public ResponseEntity<AddressDTO> getAddress(@PathVariable Long addressId) {
         AddressDTO addressDTO = addressService.getAddressById(addressId);
-
-        return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.FOUND);
-    }
-
-    @PutMapping("/address/{addressId}")
-    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Long addressId, @Valid @RequestBody Address address) {
-        AddressDTO addressDTO = addressService.updateAddress(addressId, address);
+        if (addressDTO == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 
         return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
     }
 
-    @DeleteMapping("/address/{addressId}")
+    @PutMapping("/{addressId}")
+    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Long addressId, @Valid @RequestBody Address address) {
+        AddressDTO addressDTO = addressService.updateAddress(addressId, address);
+        if (addressDTO == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{addressId}")
     public ResponseEntity<String> deleteAddress(@PathVariable Long addressId) {
         addressService.deleteAddress(addressId);
 

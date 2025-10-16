@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import com.grabbler.enums.OrderStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -38,7 +39,7 @@ public class OrderRepositoryTest {
         order.setUser(user);
         order.setOrderDate(LocalDate.now());
         order.setTotalAmount(150.75);
-        order.setOrderStatus("PENDING");
+        order.setOrderStatus(OrderStatus.valueOf("PENDING"));
         entityManager.persist(order);
         entityManager.flush();
     }
