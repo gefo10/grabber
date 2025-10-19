@@ -2,6 +2,7 @@ package com.grabbler;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.boot.CommandLineRunner;
 import com.grabbler.repositories.*;
 
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import com.grabbler.models.*;
 
 @SpringBootApplication
+@EnableCaching // TODO: maybe switch to redis caching later
 public class GrabblerApiApplication implements CommandLineRunner {
 
     private final RoleRepository roleRepository;

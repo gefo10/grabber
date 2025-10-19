@@ -82,6 +82,8 @@ public class UserServiceImpl implements UserService {
             addressEntity.setStreet(street);
 
             addressEntity = addressRepository.save(addressEntity);
+        } else {
+            addressEntity = address.get();
         }
 
         user.setAddresses(List.of(addressEntity));

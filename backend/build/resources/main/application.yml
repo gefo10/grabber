@@ -16,6 +16,10 @@ spring:
         show_sql: true
         format_sql: true
 
+jwt:
+  secret: your_jwt_secret_key
+  expiration: 86400000  # 1 day in milliseconds
+
 server:
   port: 8080
 

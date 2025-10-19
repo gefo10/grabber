@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +18,14 @@ import com.grabbler.payloads.cart.*;
 import com.grabbler.services.CartService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1/carts")
 public class CartController {
 
     @Autowired
     public CartService cartService;
 
-    @PostMapping("/public/carts/{cartId}/products/{productId}/quantity/{quantity}")
+    // TODO: check a better way to disallow access to other users carts
+    @PostMapping("/{cartId}/items")
     public ResponseEntity<CartDTO> addProductToCart(@PathVariable Long cartId, @PathVariable Long productId,
             @PathVariable Integer quantity) {
         CartDTO cartDTO = cartService.addProductToCart(cartId, productId, quantity);
@@ -31,7 +33,8 @@ public class CartController {
         return new ResponseEntity<CartDTO>(cartDTO, HttpStatus.CREATED);
     }
 
-    @GetMapping("/admin/carts")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
     public ResponseEntity<List<CartDTO>> getCarts() {
         List<CartDTO> cartDTOs = cartService.getAllCarts();
 

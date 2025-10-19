@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Entity
 @Data
 @Table(name = "roles")
@@ -21,4 +20,9 @@ public class Role {
     private Long roleId;
 
     private String roleName;
+
+    @Override
+    public String toString() {
+        return this.roleName;
+    }
 }
