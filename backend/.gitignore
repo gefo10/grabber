@@ -1,29 +1,42 @@
-# Build outputs
-target/
-build/
-out/
+# Build outputs and compiled code
+/build
+/target
+/out
+bin/
 
-# Dependencies
-# (Maven/Gradle download caches should NOT be in the repo)
-# ~/.m2 and ~/.gradle are user home caches, not in project dir—so nothing to add here
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.factorypath
+.settings/
+.vscode/
 
-# Spring specifics
-# Don’t commit local overrides or secrets
-application-*.yml
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Log files and temporary files
+*.log
+*.tmp
+*.temp
+
+# Spring Boot specific
 application-*.properties
-# If you must commit defaults, keep only non-secret `application.yml` and ignore overrides:
-# application-local.yml
+application-*.yml
+!application-production.properties
+!application-production.yml
 
-# Tools
-.mvn/wrapper/maven-wrapper.jar
-# Keep the wrapper scripts:
-#!.mvn/wrapper/maven-wrapper.jar
-# If using Gradle:
+# Gradle
 .gradle/
 .gradle-cache/
 gradle-app.settings
-# Coverage / reports
+build/reports/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Other
 coverage/
 jacoco.exec
-build/reports/
-

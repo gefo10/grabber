@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -80,10 +78,13 @@ public class AuthController {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            authRequest.getUsername(),
+                            authRequest.getEmail(),
                             authRequest.getPassword()));
 
             User user = (User) auth.getPrincipal();
+
+            System.out.println("User auth: " + user.getEmail() + " Password " + user.getPassword());
+            System.out.println("User roles: " + user.getAuthorities());
 
             String username = user.getUsername();
             String email = user.getEmail();
@@ -92,7 +93,9 @@ public class AuthController {
                     .map(authority -> authority.getAuthority())
                     .collect(Collectors.toList());
 
+            System.out.println("About to generate jwt");
             final String jwt = jwtUtil.generateToken(username, email, roles, userId);
+            System.out.println("JWT generated: " + jwt);
 
             return ResponseEntity.ok().body("{\"token\": \"" + jwt + "\"}");
         } catch (Exception e) {

@@ -17,7 +17,7 @@ spring:
         format_sql: true
 
 jwt:
-  secret: your_jwt_secret_key
+  secret: b4AYNaI6lyiZZ4g9OQpmJnkqnna35FL0qJVFPWLEuno=
   expiration: 86400000  # 1 day in milliseconds
 
 server:
