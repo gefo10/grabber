@@ -13,8 +13,8 @@ import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Cart;
 import com.grabbler.models.CartItem;
 import com.grabbler.models.Product;
-import com.grabbler.payloads.cart.*;
-import com.grabbler.payloads.product.*;
+import com.grabbler.payloads.cart.CartDTO;
+import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
 
@@ -103,11 +103,11 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartDTO getCart(String email, Long cartId) {
-        Optional<Cart> cart_Optional = cartRepository.findCartByEmailAndCartId(email, cartId);
+    public CartDTO getCartByEmail(String email) {
+        Optional<Cart> cart_Optional = cartRepository.findCartByUserEmail(email);
 
         if (cart_Optional.isEmpty()) {
-            throw new ResourceNotFoundException("Cart", "cartId", cartId);
+            throw new ResourceNotFoundException("Cart", "email", email);
         }
 
         Cart cart = cart_Optional.get();
@@ -124,15 +124,15 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public CartDTO updateProductQuantityInCart(Long cartId, Long productId,
+    public CartDTO updateCartItem(String userEmail, Long itemId,
             Integer quantity) {
 
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
+        Cart cart = cartRepository.findCartByUserEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "user email", userEmail));
 
-        Product product = productService.getProductById(productId);
+        Product product = productService.getProductById(itemId);
 
-        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(itemId, cart.getCartId());
 
         if (cartItem == null) {
             throw new APIException("Product" + product.getProductName() + " does not exist in the cart");

@@ -4,16 +4,16 @@ import java.util.List;
 import java.util.Optional;
 
 import com.grabbler.models.Cart;
-import com.grabbler.payloads.cart.*;
+import com.grabbler.payloads.cart.CartDTO;
 
 public interface CartService {
     CartDTO addProductToCart(Long cartId, Long productId, Integer quantity);
 
     List<CartDTO> getAllCarts();
 
-    CartDTO getCart(String email, Long cartId);
+    CartDTO getCartByEmail(String email);
 
-    CartDTO updateProductQuantityInCart(Long cartId, Long productId, Integer quantity);
+    CartDTO updateCartItem(String userEmail, Long itemId, Integer quantity);
 
     void updateProductInCart(Long cartId, Long productId);
 
