@@ -2,13 +2,21 @@ package com.grabbler.services;
 
 import java.util.List;
 
-import com.grabbler.payloads.order.*;
-import com.grabbler.payloads.payment.*;
 import com.grabbler.enums.OrderStatus;
+import com.grabbler.payloads.order.OrderDTO;
+import com.grabbler.payloads.order.OrderItemDTO;
+import com.grabbler.payloads.order.OrderResponse;
+import com.grabbler.payloads.payment.PaymentDTO;
 
 public interface OrderService {
 
-    OrderDTO placeOrder(Long userId, Long cartId, PaymentDTO paymentDTO);
+    OrderDTO placeOrder(Long userId, PaymentDTO paymentDTO);
+
+    String cancelOrder(Long orderId, Long userId);
+
+    List<OrderItemDTO> getOrderItems(Long orderId);
+
+    boolean isOrderOwner(Long orderId, Long userId);
 
     OrderDTO getOrder(String emailId, Long orderId);
 
@@ -18,5 +26,5 @@ public interface OrderService {
 
     OrderDTO updateOrder(String emailId, Long orderId, OrderStatus orderStatus);
 
-    boolean updateOrderStatus(Long orderId, OrderStatus orderStatus);
+    OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus);
 }

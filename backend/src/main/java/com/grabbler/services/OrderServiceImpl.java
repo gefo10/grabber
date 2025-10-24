@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,10 @@ import com.grabbler.models.OrderItem;
 import com.grabbler.models.Payment;
 import com.grabbler.models.Product;
 import com.grabbler.models.User;
-import com.grabbler.payloads.order.*;
-import com.grabbler.payloads.payment.*;
+import com.grabbler.payloads.order.OrderDTO;
+import com.grabbler.payloads.order.OrderItemDTO;
+import com.grabbler.payloads.order.OrderResponse;
+import com.grabbler.payloads.payment.PaymentDTO;
 import com.grabbler.repositories.OrderItemRepository;
 import com.grabbler.repositories.OrderRepository;
 
@@ -56,21 +59,26 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDTO placeOrder(Long userId, Long cartId, PaymentDTO paymentDTO) {
-        Optional<Cart> cart_Optional = cartService.findByCartId(cartId);
+    public OrderDTO placeOrder(Long userId, PaymentDTO paymentDTO) {
+
+        Optional<User> userOpt = userService.findUserById(userId);
+
+        if (userOpt.isEmpty()) {
+            throw new ResourceNotFoundException("User", "userId", userId);
+        }
+
+        User user = userOpt.get();
+        Optional<Cart> cart_Optional = cartService.findCartByEmail(user.getEmail());
 
         if (cart_Optional.isEmpty()) {
-            throw new ResourceNotFoundException("Cart", "cartId", cartId);
+            throw new ResourceNotFoundException("Cart", "email", user.getEmail());
         }
 
         Cart cart = cart_Optional.get();
 
         Order order = new Order();
-        Optional<User> user_Optional = userService.findUserById(userId);
-        if (user_Optional.isEmpty()) {
-            throw new ResourceNotFoundException("User", "userId", userId);
-        }
-        order.setUser(user_Optional.get());
+
+        order.setUser(user);
         order.setOrderDate(LocalDate.now());
 
         order.setTotalAmount(cart.getTotalPrice());
@@ -106,7 +114,10 @@ public class OrderServiceImpl implements OrderService {
         cart.getCartItems().forEach(item -> {
             int quantity = item.getQuantity();
             Product product = item.getProduct();
-            cartService.deleteProductFromCart(cartId, item.getProduct().getProductId());
+
+            // clear cart after order placement
+            cartService.deleteCartItem(user.getEmail(), item.getProduct().getProductId());
+
             productService.decreaseProductQuantity(product.getProductId(), quantity);
         });
 
@@ -185,16 +196,78 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public boolean updateOrderStatus(Long orderId, OrderStatus orderStatus) {
+    public OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus) {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isPresent()) {
             Order order = orderOpt.get();
             order.setOrderStatus(orderStatus);
             orderRepository.save(order);
-            return true;
+            OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+            return orderDTO;
         } else {
             throw new ResourceNotFoundException("Order", "orderId", orderId);
         }
+    }
+
+    @Override
+    public String cancelOrder(Long orderId, Long userId) {
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+
+        if (orderOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Order", "orderId", orderId);
+        }
+
+        Order order = orderOpt.get();
+
+        if (!order.getUser().getUserId().equals(userId)) {
+            throw new APIException("You don't have permission to cancel this order");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.SHIPPED ||
+                order.getOrderStatus() == OrderStatus.DELIVERED) {
+            throw new APIException("Cannot cancel order that has been shipped or delivered");
+        }
+
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            product.setQuantity(product.getQuantity() + item.getQuantity());
+
+            // Todo: update product repository
+        }
+
+        return "Order cancelled successfully";
+    }
+
+    @Override
+    public List<OrderItemDTO> getOrderItems(Long orderId) {
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+
+        if (orderOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Order", "orderId", orderId);
+        }
+
+        Order order = orderOpt.get();
+
+        return order.getOrderItems().stream()
+                .map(item -> modelMapper.map(item, OrderItemDTO.class))
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    public boolean isOrderOwner(Long orderId, Long userId) {
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+
+        if (orderOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Order", "orderId", orderId);
+        }
+
+        Order order = orderOpt.get();
+
+        return order.getUser().getUserId().equals(userId);
     }
 
 }

@@ -15,9 +15,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Category;
 import com.grabbler.models.Product;
-import com.grabbler.payloads.product.*;
+import com.grabbler.payloads.product.CreateProductRequest;
+import com.grabbler.payloads.product.PatchProductRequest;
+import com.grabbler.payloads.product.ProductDTO;
+import com.grabbler.payloads.product.ProductResponse;
+import com.grabbler.payloads.product.UpdateProductRequest;
 import com.grabbler.repositories.ProductRepository;
 
 @Service
@@ -39,16 +44,24 @@ public class ProductServiceImpl implements ProductService {
     private ModelMapper modelMapper;
 
     @Override
-    public ProductDTO addProduct(Long categoryId, Product product) {
-        Category category = categoryService.findCategoryById(categoryId);
+    public ProductDTO createProduct(CreateProductRequest request) {
+        Category category = categoryService.findCategoryById(request.getCategoryId());
 
+        Product product = new Product();
+        product.setProductName(request.getProductName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setQuantity(request.getQuantity());
+        product.setDiscount(request.getDiscount());
         product.setCategory(category);
-        product = productRepository.save(product);
 
-        ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+        // Calculate special price
+        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+        product.setSpecialPrice(specialPrice);
 
-        return productDTO;
+        Product savedProduct = productRepository.save(product);
 
+        return modelMapper.map(savedProduct, ProductDTO.class);
     }
 
     @Override
@@ -95,17 +108,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO updateProduct(Long productId, Product product) {
-        Product existingProduct = productRepository.findById(productId)
+    public ProductDTO updateProduct(Long productId, UpdateProductRequest request) {
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        existingProduct.setProductName(product.getProductName());
-        existingProduct.setDescription(product.getDescription());
-        existingProduct.setPrice(product.getPrice());
-        existingProduct.setQuantity(product.getQuantity());
-        existingProduct.setImage(product.getImage());
+        product.setProductName(request.getProductName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setQuantity(request.getQuantity());
+        //existingProduct.setImage(request.getImage());
 
-        Product updatedProduct = productRepository.save(existingProduct);
+        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+        product.setSpecialPrice(specialPrice);
+        
+        Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
 
@@ -120,6 +136,36 @@ public class ProductServiceImpl implements ProductService {
         existingProduct.setImage(fileName);
 
         Product updatedProduct = productRepository.save(existingProduct);
+        return modelMapper.map(updatedProduct, ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO partialUpdateProduct(Long productId, PatchProductRequest request) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+        
+        // Only update fields that are provided
+        if (request.getProductName() != null) {
+            product.setProductName(request.getProductName());
+        }
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+        if (request.getPrice() != null) {
+            product.setPrice(request.getPrice());
+        }
+        if (request.getQuantity() != null) {
+            product.setQuantity(request.getQuantity());
+        }
+        if (request.getDiscount() != null) {
+            product.setDiscount(request.getDiscount());
+        }
+        
+        // Recalculate special price
+        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+        product.setSpecialPrice(specialPrice);
+        
+        Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
 
@@ -174,6 +220,50 @@ public class ProductServiceImpl implements ProductService {
         } else {
             throw new RuntimeException("Product not found with id: " + productId);
         }
+    }
+
+    @Override
+    public String deleteProductImage(Long productId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteProductImage'");
+    }
+
+    @Override
+    public ProductResponse getProductsByPriceRange(Double minPrice, Double maxPrice, Integer pageNumber,
+            Integer pageSize, String sortBy, String sortOrder) {
+
+        Sort sort = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Product> productPage = productRepository.findByPriceRange(
+                minPrice != null ? minPrice : 0.0,
+                maxPrice != null ? maxPrice : Double.MAX_VALUE, 
+                pageable
+        );
+
+        List<Product> products = productPage.getContent();
+        List<ProductDTO> productDTOs = products.stream()
+            .map(product -> modelMapper.map(product, ProductDTO.class))
+            .collect(Collectors.toList());
+
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setContent(productDTOs);
+        productResponse.setPageSize(productPage.getSize());
+        productResponse.setPageNumber(productPage.getNumber());
+        productResponse.setTotalPages(productPage.getTotalPages());
+        productResponse.setLastPage(productPage.isLast());
+        productResponse.setTotalElements(productResponse.getTotalElements());
+
+        return productResponse;
+    }
+
+    @Override
+    public ProductDTO getProductDTOById(Long productId) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+        return modelMapper.map(product, ProductDTO.class);
     }
 
 }

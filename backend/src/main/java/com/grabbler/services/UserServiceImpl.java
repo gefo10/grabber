@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,10 +19,12 @@ import com.grabbler.models.Cart;
 import com.grabbler.models.CartItem;
 import com.grabbler.models.Role;
 import com.grabbler.models.User;
-import com.grabbler.payloads.address.*;
-import com.grabbler.payloads.user.*;
-import com.grabbler.payloads.cart.*;
-import com.grabbler.payloads.product.*;
+import com.grabbler.payloads.address.AddressDTO;
+import com.grabbler.payloads.cart.CartDTO;
+import com.grabbler.payloads.product.ProductDTO;
+import com.grabbler.payloads.user.UserCreateDTO;
+import com.grabbler.payloads.user.UserDTO;
+import com.grabbler.payloads.user.UserResponse;
 import com.grabbler.repositories.AddressRepository;
 import com.grabbler.repositories.RoleRepository;
 import com.grabbler.repositories.UserRepository;
@@ -221,11 +222,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
         List<CartItem> cartItems = user.getCart().getCartItems();
-        Long cartId = user.getCart().getCartId();
 
         cartItems.forEach(cartItem -> {
             Long productId = cartItem.getProduct().getProductId();
-            cartService.deleteProductFromCart(cartId, productId);
+            cartService.deleteCartItem(user.getEmail(), productId);
         });
         userRepository.delete(user);
 

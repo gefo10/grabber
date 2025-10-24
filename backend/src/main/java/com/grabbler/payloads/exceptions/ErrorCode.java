@@ -1,0 +1,47 @@
+package com.grabbler.payloads.exceptions;
+
+public enum ErrorCode {
+    // Validation Errors (400)
+    VALIDATION_ERROR("VALIDATION_ERROR"),
+    INVALID_REQUEST("INVALID_REQUEST"),
+
+    // Authentication Errors (401)
+    AUTHENTICATION_FAILED("AUTHENTICATION_FAILED"),
+    INVALID_TOKEN("INVALID_TOKEN"),
+    TOKEN_EXPIRED("TOKEN_EXPIRED"),
+
+    // Authorization Errors (403)
+    ACCESS_DENIED("ACCESS_DENIED"),
+    INSUFFICIENT_PERMISSIONS("INSUFFICIENT_PERMISSIONS"),
+
+    // Not Found Errors (404)
+    RESOURCE_NOT_FOUND("RESOURCE_NOT_FOUND"),
+    USER_NOT_FOUND("USER_NOT_FOUND"),
+    PRODUCT_NOT_FOUND("PRODUCT_NOT_FOUND"),
+    ORDER_NOT_FOUND("ORDER_NOT_FOUND"),
+    CART_NOT_FOUND("CART_NOT_FOUND"),
+
+    // Conflict Errors (409)
+    RESOURCE_ALREADY_EXISTS("RESOURCE_ALREADY_EXISTS"),
+    DUPLICATE_EMAIL("DUPLICATE_EMAIL"),
+    INSUFFICIENT_STOCK("INSUFFICIENT_STOCK"),
+
+    // Business Logic Errors (422)
+    BUSINESS_RULE_VIOLATION("BUSINESS_RULE_VIOLATION"),
+    INVALID_ORDER_STATE("INVALID_ORDER_STATE"),
+    PAYMENT_FAILED("PAYMENT_FAILED"),
+
+    // Server Errors (500)
+    INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR"),
+    DATABASE_ERROR("DATABASE_ERROR");
+
+    private final String code;
+
+    ErrorCode(String code) {
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
+    }
+}

@@ -1,6 +1,7 @@
 package com.grabbler.controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,8 @@ public class CartController {
             Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        CartDTO cartDTO = cartService.addProductToCart(user.getUserId(), request.getProductId(), request.getQuantity());
+        CartDTO cartDTO = cartService.addProductToUserCart(user.getEmail(), request.getProductId(),
+                request.getQuantity());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(cartDTO);
     }
@@ -84,9 +86,7 @@ public class CartController {
     public ResponseEntity<ApiResponse> deleteCartItem(@PathVariable Long itemId, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        Cart cart = cartService.findCartByEmail(user.getEmail())
-                .orElseThrow(() -> new APIException("Failed to retrieve user's cart"));
-        String status = cartService.deleteProductFromCart(cart.getCartId(), itemId);
+        String status = cartService.deleteCartItem(user.getEmail(), itemId);
 
         return ResponseEntity.ok(new ApiResponse(status, true));
     }
@@ -104,8 +104,15 @@ public class CartController {
     @Operation(summary = "Get cart by ID", description = "Admin endpoint to get a specific cart")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/carts/{cartId}")
-    public ResponseEntity<CartDTO> getCartById(@PathVariable Long cartId) {
-        CartDTO cartDTO = cartService.getCartById(cartId);
+    public ResponseEntity<?> getCartById(@PathVariable Long cartId) {
+        Optional<Cart> cartOpt = cartService.findByCartId(cartId);
+
+        if (cartOpt.isEmpty()) {
+            throw new APIException(String.format("Cart with id %d was not found", cartId));
+        }
+
+        Cart cartDTO = cartOpt.get();
+
         return ResponseEntity.ok(cartDTO);
     }
 }

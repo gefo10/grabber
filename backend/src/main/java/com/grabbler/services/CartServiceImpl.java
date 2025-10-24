@@ -1,5 +1,6 @@
 package com.grabbler.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,7 +18,6 @@ import com.grabbler.payloads.cart.CartDTO;
 import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -37,13 +37,13 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public CartDTO addProductToCart(Long cartId, Long productId, Integer quantity) {
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
+    public CartDTO addProductToUserCart(String email, Long productId, Integer quantity) {
+        Cart cart = cartRepository.findCartByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
 
         Product product = productService.getProductById(productId);
 
-        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cart.getCartId());
 
         if (cartItem != null) {
             throw new APIException("Product" + productId + " already exists in the cart");
@@ -161,48 +161,19 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void updateProductInCart(Long cartId, Long productId) {
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
-
-        Product product = productService.getProductById(productId);
-
-        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
-
-        if (cartItem == null) {
-            throw new APIException("Product" + product.getProductName() + " does not exist in the cart");
-        }
-
-        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
-
-        cartItem.setProductPrice(product.getSpecialPrice());
-
-        cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * cartItem.getQuantity()));
-        cartItem = cartItemRepository.save(cartItem);
-
-    }
-
-    @Override
     @Transactional
-    public String deleteProductFromCart(Long cartId, Long productId) {
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
+    public String deleteCartItem(String email, Long cartItemId) {
+        Cart cart = cartRepository.findCartByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
 
-        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cartId);
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(cartItemId, cart.getCartId());
 
         if (cartItem == null) {
-            throw new ResourceNotFoundException("Product", "productId", productId);
+            throw new ResourceNotFoundException("Product", "productId", cartItemId);
         }
 
-        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
-
-        Product product = cartItem.getProduct();
-        product.setQuantity(product.getQuantity() + cartItem.getQuantity());
-
-        cart.setTotalPrice(cartPrice);
-        cartItemRepository.deleteCartItemByProductIdAndCartId(productId, cartId);
-
-        return "Product" + product.getProductName() + " deleted from the cart";
+        deleteCartItemFromCart(cart, cartItem);
+        return "Product" + cartItem.getProduct().getProductName() + " deleted from the cart";
     }
 
     @Override
@@ -215,4 +186,44 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findById(cartId);
     }
 
+    @Override
+    public String clearCart(String email) {
+        Optional<Cart> cartOpt = cartRepository.findCartByUserEmail(email);
+
+        if (cartOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Cart", "email", email);
+        }
+
+        Cart cart = cartOpt.get();
+
+        List<CartItem> items = new ArrayList<>(cart.getCartItems());
+
+        for (CartItem item : items) {
+            try {
+                deleteCartItemFromCart(cart, item);
+            } catch (Exception e) {
+                throw new APIException("Cart item could not be deleted");
+            }
+        }
+
+        return "Cart cleared successfully";
+    }
+
+    private void deleteCartItemFromCart(Cart cart, CartItem cartItem) {
+        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+        Product product = cartItem.getProduct();
+        product.setQuantity(product.getQuantity() + cartItem.getQuantity());
+
+        // TODO, save product back
+        cart.setTotalPrice(cartPrice);
+        cartItemRepository.deleteCartItemByProductIdAndCartId(cartItem.getCartItemId(), cart.getCartId());
+    }
+
+    @Override
+    public CartDTO cartToDto(Cart cart) {
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+
+        return cartDTO;
+    }
 }
