@@ -116,11 +116,11 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setQuantity(request.getQuantity());
-        //existingProduct.setImage(request.getImage());
+        // existingProduct.setImage(request.getImage());
 
         double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
         product.setSpecialPrice(specialPrice);
-        
+
         Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
@@ -142,8 +142,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO partialUpdateProduct(Long productId, PatchProductRequest request) {
         Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
         // Only update fields that are provided
         if (request.getProductName() != null) {
             product.setProductName(request.getProductName());
@@ -160,11 +160,11 @@ public class ProductServiceImpl implements ProductService {
         if (request.getDiscount() != null) {
             product.setDiscount(request.getDiscount());
         }
-        
+
         // Recalculate special price
         double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
         product.setSpecialPrice(specialPrice);
-        
+
         Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
@@ -238,14 +238,13 @@ public class ProductServiceImpl implements ProductService {
 
         Page<Product> productPage = productRepository.findByPriceRange(
                 minPrice != null ? minPrice : 0.0,
-                maxPrice != null ? maxPrice : Double.MAX_VALUE, 
-                pageable
-        );
+                maxPrice != null ? maxPrice : Double.MAX_VALUE,
+                pageable);
 
         List<Product> products = productPage.getContent();
         List<ProductDTO> productDTOs = products.stream()
-            .map(product -> modelMapper.map(product, ProductDTO.class))
-            .collect(Collectors.toList());
+                .map(product -> modelMapper.map(product, ProductDTO.class))
+                .collect(Collectors.toList());
 
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOs);
@@ -261,9 +260,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO getProductDTOById(Long productId) {
         Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
         return modelMapper.map(product, ProductDTO.class);
+    }
+
+    @Override
+    public Product save(Product product) {
+        return productRepository.save(product);
     }
 
 }

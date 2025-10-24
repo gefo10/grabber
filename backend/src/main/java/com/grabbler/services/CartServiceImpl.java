@@ -187,6 +187,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public String clearCart(String email) {
         Optional<Cart> cartOpt = cartRepository.findCartByUserEmail(email);
 
@@ -215,7 +216,7 @@ public class CartServiceImpl implements CartService {
         Product product = cartItem.getProduct();
         product.setQuantity(product.getQuantity() + cartItem.getQuantity());
 
-        // TODO, save product back
+        productService.save(product);
         cart.setTotalPrice(cartPrice);
         cartItemRepository.deleteCartItemByProductIdAndCartId(cartItem.getCartItemId(), cart.getCartId());
     }

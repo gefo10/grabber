@@ -10,11 +10,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.util.Optional;
+import org.springframework.context.annotation.Import; // Import annotation
 
 import com.grabbler.models.Address;
+import com.grabbler.GrabblerApiApplication;
 
 @DataJpaTest
-@EnableJpaRepositories(basePackageClasses = AddressRepository.class)
+// @EnableJpaRepositories(basePackageClasses = AddressRepository.class)
 @EntityScan(basePackages = "com.grabbler.models")
 public class AddressRepositoryTest {
     @Autowired
@@ -24,7 +26,7 @@ public class AddressRepositoryTest {
     private AddressRepository addressRepository;
 
     @Test
-    public void whenFindByCountryAndCityAndPlzAndAddressLineOne_thenReturnAddress() {
+    public void whenFindByCountryAndCityAndPlzAndStreet_thenReturnAddress() {
         // given
         Address address = new Address();
         address.setCountry("USA");

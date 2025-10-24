@@ -20,7 +20,6 @@ import com.grabbler.services.AddressService;
 
 import jakarta.validation.Valid;
 
-//TODO: refactor the endpoints to match the REST conventions
 @RestController
 @RequestMapping("/api/v1/addresses")
 public class AddressController {

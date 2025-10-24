@@ -89,7 +89,7 @@ public class OrderServiceTest {
         when(orderItemRepository.saveAll(any(Iterable.class))).thenReturn(new ArrayList<>());
 
         // Call the method under test
-        orderService.placeOrder(user.getUserId(), cart.getCartId(), paymentDTO);
+        orderService.placeOrder(user.getUserId(), paymentDTO);
 
         // Verify that the necessary methods were called exactly once
         verify(cartService, times(1)).findByCartId(cart.getCartId());

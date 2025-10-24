@@ -11,7 +11,5 @@ public class UserServiceTest {
         userDto.setFirstName("John");
         userDto.setLastName("Doe");
         userDto.setEmail("john.doe@example.com");
-        userDto.setPassword("password123");
-
     }
 }

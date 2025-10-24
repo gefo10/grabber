@@ -75,20 +75,20 @@ public class CartController {
 
     @Operation(summary = "Clear cart", description = "Remove all items from the cart")
     @DeleteMapping("/cart")
-    public ResponseEntity<ApiResponse> clearCart(Authentication authentication) {
+    public ResponseEntity<ApiResponse<?>> clearCart(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         String message = cartService.clearCart(user.getEmail());
-        return ResponseEntity.ok(new ApiResponse(message, true));
+        return ResponseEntity.ok(ApiResponse.success(message));
     }
 
     @Operation(summary = "Remove item from cart", description = "Remove a specific item from the cart")
     @DeleteMapping("/cart/items/{itemId}")
-    public ResponseEntity<ApiResponse> deleteCartItem(@PathVariable Long itemId, Authentication authentication) {
+    public ResponseEntity<ApiResponse<?>> deleteCartItem(@PathVariable Long itemId, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
         String status = cartService.deleteCartItem(user.getEmail(), itemId);
 
-        return ResponseEntity.ok(new ApiResponse(status, true));
+        return ResponseEntity.ok(ApiResponse.success(status));
     }
 
     // ==================== Admin Operations ====================

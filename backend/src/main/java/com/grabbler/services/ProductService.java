@@ -47,4 +47,6 @@ public interface ProductService {
 
     boolean decreaseProductQuantity(Long productId, Integer quantity);
 
+    Product save(Product product);
+
 }
