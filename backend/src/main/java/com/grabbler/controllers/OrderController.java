@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,61 +18,105 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+
+import com.grabbler.payloads.ApiResponse;
 import com.grabbler.payloads.order.*;
 import com.grabbler.payloads.payment.*;
 import com.grabbler.services.OrderService;
 import com.grabbler.enums.OrderStatus;
+import com.grabbler.models.User;
 
-//TODO: refactor the endpoints to match the REST conventions
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
     @Autowired
     public OrderService orderService;
 
-    @PreAuthorize("")
-    @PostMapping("/public/users/{userId}/carts/{cartId}/placeOrder")
-    public ResponseEntity<OrderDTO> orderProducts(
-            @PathVariable Long userId,
-            @PathVariable Long cartId,
-            @RequestBody PaymentDTO paymnetDTO) {
-        OrderDTO orderDTO = orderService.placeOrder(userId, cartId, paymnetDTO);
+    @Operation(summary = "Create order", description = "Place an order from the user's cart")
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(
+            @RequestBody CreateOrderRequest request,
+            Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        OrderDTO orderDTO = orderService.placeOrder(user.getUserId(), request.getPayment());
 
         return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.CREATED);
     }
 
-    @GetMapping("/admin/orders")
-    public ResponseEntity<OrderResponse> getAllOrders(
+    @Operation(summary = "Get user's orders", description = "List all orders for the authenticated user")
+    @GetMapping
+    public ResponseEntity<List<OrderDTO>> getUserOrders(
+            Authentication authentication,
             @RequestParam(name = "pageNumber", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10", required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = "id", required = false) String sortBy,
+            @RequestParam(name = "sortBy", defaultValue = "orderDate", required = false) String sortBy,
             @RequestParam(name = "sortOrder", defaultValue = "ASC", required = false) String sortOrder) {
-        OrderResponse orderResponse = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortOrder);
 
-        return new ResponseEntity<OrderResponse>(orderResponse, HttpStatus.OK);
+            User user = (User) authentication.getPrincipal();
+        
+            // Check if user is admin
+            boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isAdmin) {
+                // Return all orders with pagination
+                OrderResponse response = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortOrder);
+                return ResponseEntity.ok(response.getContent());
+            } else {
+                // Return only user's orders
+                List<OrderDTO> orders = orderService.getOrdersByUser(user.getEmail());
+                return ResponseEntity.ok(orders);
+            }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #emailId == authentication.principal.username")
-    @GetMapping("/public/users/{emailId}/orders")
-    public ResponseEntity<List<OrderDTO>> getOrdersByUser(@PathVariable String emailId) {
-        List<OrderDTO> orderDTOs = orderService.getOrdersByUser(emailId);
+    @PreAuthorize("hasRole('ADMIN') or @orderService.isOrderOwner(#orderId, authentication.principal.userId)")
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDTO> getOrder(@PathVariable Long orderId, Authentication authentication) {
 
-        return new ResponseEntity<List<OrderDTO>>(orderDTOs, HttpStatus.OK);
+         User user = (User) authentication.getPrincipal();
+        OrderDTO orderDTO = orderService.getOrder(user.getEmail(), orderId);
+        return ResponseEntity.ok(orderDTO);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #emailId == authentication.principal.username")
-    @GetMapping("/public/users/{emailId}/orders/{orderId}")
-    public ResponseEntity<OrderDTO> getOrderByUser(@PathVariable String emailId, @PathVariable Long orderId) {
-        OrderDTO orderDTO = orderService.getOrder(emailId, orderId);
-        return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.OK);
+    @Operation(summary = "Cancel order", description = "Cancel an order (if status allows)")
+    @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('ADMIN') or @orderService.isOrderOwner(#orderId, authentication.principal.userId)")
+    public ResponseEntity<ApiResponse<?>> cancelOrder(
+            @PathVariable Long orderId,
+            Authentication authentication) {
+        
+        User user = (User) authentication.getPrincipal();
+        String message = orderService.cancelOrder(orderId, user.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(message));
     }
 
+    @Operation(summary = "Get order items", description = "List all items in a specific order")
+    @GetMapping("/{orderId}/items")
+    @PreAuthorize("hasRole('ADMIN') or @orderService.isOrderOwner(#orderId, authentication.principal.userId)")
+    public ResponseEntity<List<OrderItemDTO>> getOrderItems(@PathVariable Long orderId) {
+        List<OrderItemDTO> items = orderService.getOrderItems(orderId);
+        return ResponseEntity.ok(items);
+    }
+
+
+
+    @Operation(summary = "Update order status", description = "Update the status of an order (Admin only)")
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/admin/users/{emailId}/orders/{orderId}/orderStatus/{orderStatus}")
-    public ResponseEntity<OrderDTO> updateOrderByUser(@PathVariable String emailId, @PathVariable Long orderId,
-            @PathVariable String orderStatus) {
-        OrderDTO orderDTO = orderService.updateOrder(emailId, orderId, OrderStatus.valueOf(orderStatus));
-        return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.OK);
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<OrderDTO> updateOrderStatus(
+            @PathVariable Long orderId,
+            @Valid @RequestBody UpdateOrderStatusRequest request) {
+        
+        OrderDTO orderDTO = orderService.updateOrderStatus(
+            orderId,
+            request.getStatus()
+        );
+        
+        return ResponseEntity.ok(orderDTO);
     }
 
 }

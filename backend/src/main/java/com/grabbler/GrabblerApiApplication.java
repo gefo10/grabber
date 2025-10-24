@@ -3,6 +3,8 @@ package com.grabbler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import com.grabbler.repositories.*;
 
@@ -16,13 +18,15 @@ public class GrabblerApiApplication implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public GrabblerApiApplication(RoleRepository roleRepository, UserRepository userRepository) {
+    public GrabblerApiApplication(RoleRepository roleRepository, UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    // private final PasswordEncoder passwordEncoder;
     public static void main(String[] args) {
         SpringApplication.run(GrabblerApiApplication.class, args);
     }
@@ -52,7 +56,7 @@ public class GrabblerApiApplication implements CommandLineRunner {
                     admin.setFirstName("Admin");
                     admin.setLastName("User");
                     admin.setEmail(ADMIN_EMAIL);
-                    admin.setPassword("admin123"); // TODO: ensure to hash the password
+                    admin.setPassword(passwordEncoder.encode("admin123")); // TODO: ensure to hash the password
                     admin.getRoles().add(adminRole);
                     userRepository.save(admin);
                     System.out.println("Admin user created.");
