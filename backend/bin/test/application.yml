@@ -8,14 +8,25 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
   h2:
     console:
       enabled: true
+
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
     password:
     driver-class-name: org.h2.Driver
+
+jwt:
+  secret: Oz7ciXA6Yqmp8DWxwHtOAUSw6bgZWs6Fz0kbpys8BFQLjIF6piorxsZe5F3Es2m6PVBysW+uaKv8nxmG0ubiQw==
+  expiration: 3600000
+
+logging:
+  level:
+    org.springframework: INFO
+    com.grabbler: DEBUG
 
 # Disable security for tests
 spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
