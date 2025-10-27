@@ -17,3 +17,5 @@ logs/
 .env
 .env.*       # e.g. .env.local, .env.development
 
+.gradle
+
