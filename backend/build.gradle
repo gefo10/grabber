@@ -43,9 +43,14 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
+    testImplementation 'org.hamcrest:hamcrest:2.2'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // Lombok for tests
+    testCompileOnly 'org.projectlombok:lombok:1.18.34'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
 }
 
@@ -60,4 +65,10 @@ testing {
 
 tasks.named('test') {
 	useJUnitPlatform()
+      // Add this to see more detailed output
+    testLogging {
+        events "failed"//"passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
 }

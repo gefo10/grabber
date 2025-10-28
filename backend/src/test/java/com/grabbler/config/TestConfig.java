@@ -12,4 +12,19 @@ public class TestConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    // Optional: If you want to disable security completely for some tests
+    // Uncomment this if tests still fail
+    /*
+     * @Bean
+     * 
+     * @Primary
+     * public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws
+     * Exception {
+     * http
+     * .csrf(csrf -> csrf.disable())
+     * .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+     * return http.build();
+     * }
+     */
 }

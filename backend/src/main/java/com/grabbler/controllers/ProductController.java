@@ -32,7 +32,7 @@ import com.grabbler.payloads.ApiResponse;
 public class ProductController {
     @Autowired
     private ProductService productService;
-    
+
     // ==================== Public Endpoints ====================
 
     @Operation(summary = "Get all products", description = "List all products with pagination and sorting")
@@ -40,23 +40,24 @@ public class ProductController {
     public ResponseEntity<ProductResponse> getAllProducts(
             @RequestParam(name = "pageNumber", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10", required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = "id", required = false) String sortBy,
+            @RequestParam(name = "sortBy", defaultValue = "productId", required = false) String sortBy,
             @RequestParam(name = "sortOrder", defaultValue = "ASC", required = false) String sortOrder,
             @RequestParam(required = false) Long category,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice) {
 
-            ProductResponse response;
-        
-            if (category != null) {
-                response = productService.getProductsByCategory(category, pageNumber, pageSize, sortBy, sortOrder);
-            } else if (minPrice != null || maxPrice != null) {
-                response = productService.getProductsByPriceRange(minPrice, maxPrice, pageNumber, pageSize, sortBy, sortOrder);
-            } else {
-                response = productService.getAllProducts(pageNumber, pageSize, sortBy, sortOrder);
-            }
+        ProductResponse response;
 
-            return ResponseEntity.ok(response);
+        if (category != null) {
+            response = productService.getProductsByCategory(category, pageNumber, pageSize, sortBy, sortOrder);
+        } else if (minPrice != null || maxPrice != null) {
+            response = productService.getProductsByPriceRange(minPrice, maxPrice, pageNumber, pageSize, sortBy,
+                    sortOrder);
+        } else {
+            response = productService.getAllProducts(pageNumber, pageSize, sortBy, sortOrder);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Get product by ID", description = "Get detailed information about a specific product")
@@ -74,14 +75,13 @@ public class ProductController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(defaultValue = "productId") String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder) {
-        
+
         ProductResponse response = productService.searchProductByKeyword(q, page, size, sortBy, sortOrder);
         return ResponseEntity.ok(response);
     }
 
-   
     // ==================== Admin Endpoints ====================
-    
+
     @Operation(summary = "Create product", description = "Create a new product (Admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
@@ -93,7 +93,8 @@ public class ProductController {
     @Operation(summary = "Update product", description = "Update an existing product (Admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{productId}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @Valid @RequestBody UpdateProductRequest request) {
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId,
+            @Valid @RequestBody UpdateProductRequest request) {
         ProductDTO productDTO = productService.updateProduct(productId, request);
         return ResponseEntity.ok(productDTO);
     }
@@ -104,12 +105,12 @@ public class ProductController {
     public ResponseEntity<ProductDTO> partialUpdateProduct(
             @PathVariable Long productId,
             @RequestBody PatchProductRequest request) {
-        
+
         ProductDTO productDTO = productService.partialUpdateProduct(productId, request);
         return ResponseEntity.ok(productDTO);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{productId}")
     public ResponseEntity<ApiResponse<?>> deleteProduct(@PathVariable Long productId) {
         String status = productService.deleteProduct(productId);

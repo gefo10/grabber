@@ -44,7 +44,7 @@ public class CategoryController {
 
     @Operation(summary = "Get all categories", description = "Retrieves a paginated list of all product categories.", tags = {
             "Category Management" })
-    @GetMapping(produces = "application/json", consumes = "application/json")
+    @GetMapping(produces = "application/json")
     public ResponseEntity<CategoryResponse> getCategories(
             @RequestParam(name = "pageNumber", defaultValue = "0", required = false) Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10", required = false) Integer pageSize,

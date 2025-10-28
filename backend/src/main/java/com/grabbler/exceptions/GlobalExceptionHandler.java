@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ErrorCode.RESOURCE_NOT_FOUND.getCode(),
+                ErrorCode.USER_NOT_FOUND.getCode(),
                 ex.getMessage(),
                 request.getRequestURI());
 
@@ -128,7 +128,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ErrorCode.USER_NOT_FOUND.getCode(),
+                ErrorCode.RESOURCE_NOT_FOUND.getCode(),
                 ex.getMessage(),
                 request.getRequestURI());
 

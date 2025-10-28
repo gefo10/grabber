@@ -110,7 +110,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO updateProduct(Long productId, UpdateProductRequest request) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
         product.setProductName(request.getProductName());
         product.setDescription(request.getDescription());

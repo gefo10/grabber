@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -42,10 +43,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("api/v1/users").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users").hasRole("ADMIN")
+
+                        // product endpoints can be observed without authentication
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+
                         .requestMatchers("/api/v1/users/{id}/**").authenticated()
 
+                        // default to authenticated requests
                         .anyRequest().authenticated())
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
