@@ -10,7 +10,9 @@ import jakarta.validation.constraints.Size;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -23,11 +25,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long productId;
 
-
     @NotBlank(message = "Name is mandatory")
     @Size(min = 3, message = "Name should have atleast 3 characters")
     private String productName;
-
 
     private String image;
 
@@ -35,15 +35,15 @@ public class Product {
     @Size(min = 10, message = "Description should have atleast 10 characters")
     private String description;
 
-
     private Integer quantity;
     private double price;
     private double discount;
     private double specialPrice;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne
-    @JoinColumn(name="category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
-
 
 }

@@ -199,7 +199,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
-                "An unexpected error occurred. Please try again later.",
+                "An unexpected error occurred: " + ex.getMessage(),
                 request.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

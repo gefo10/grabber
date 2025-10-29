@@ -8,6 +8,7 @@ import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("CartService Unit Tests")
 class CartServiceImplTest {
 
     @Mock

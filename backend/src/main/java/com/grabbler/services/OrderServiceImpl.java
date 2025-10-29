@@ -110,6 +110,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orderItems = orderItemRepository.saveAll(orderItems);
+        savedOrder.setOrderItems(orderItems);
 
         cart.getCartItems().forEach(item -> {
             int quantity = item.getQuantity();

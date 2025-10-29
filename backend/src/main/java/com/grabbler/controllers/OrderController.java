@@ -37,14 +37,14 @@ public class OrderController {
     @Operation(summary = "Create order", description = "Place an order from the user's cart")
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(
-            @RequestBody CreateOrderRequest request,
+            @Valid @RequestBody CreateOrderRequest request,
             Authentication authentication) {
 
         User user = (User) authentication.getPrincipal();
 
         OrderDTO orderDTO = orderService.placeOrder(user.getUserId(), request.getPayment());
 
-        return new ResponseEntity<OrderDTO>(orderDTO, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderDTO);
     }
 
     @Operation(summary = "Get user's orders", description = "List all orders for the authenticated user")
@@ -56,28 +56,28 @@ public class OrderController {
             @RequestParam(name = "sortBy", defaultValue = "orderDate", required = false) String sortBy,
             @RequestParam(name = "sortOrder", defaultValue = "ASC", required = false) String sortOrder) {
 
-            User user = (User) authentication.getPrincipal();
-        
-            // Check if user is admin
-            boolean isAdmin = user.getAuthorities().stream()
+        User user = (User) authentication.getPrincipal();
+
+        // Check if user is admin
+        boolean isAdmin = user.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
-            if (isAdmin) {
-                // Return all orders with pagination
-                OrderResponse response = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortOrder);
-                return ResponseEntity.ok(response.getContent());
-            } else {
-                // Return only user's orders
-                List<OrderDTO> orders = orderService.getOrdersByUser(user.getEmail());
-                return ResponseEntity.ok(orders);
-            }
+        if (isAdmin) {
+            // Return all orders with pagination
+            OrderResponse response = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortOrder);
+            return ResponseEntity.ok(response.getContent());
+        } else {
+            // Return only user's orders
+            List<OrderDTO> orders = orderService.getOrdersByUser(user.getEmail());
+            return ResponseEntity.ok(orders);
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN') or @orderService.isOrderOwner(#orderId, authentication.principal.userId)")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getOrder(@PathVariable Long orderId, Authentication authentication) {
 
-         User user = (User) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
         OrderDTO orderDTO = orderService.getOrder(user.getEmail(), orderId);
         return ResponseEntity.ok(orderDTO);
     }
@@ -88,7 +88,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<?>> cancelOrder(
             @PathVariable Long orderId,
             Authentication authentication) {
-        
+
         User user = (User) authentication.getPrincipal();
         String message = orderService.cancelOrder(orderId, user.getUserId());
         return ResponseEntity.ok(ApiResponse.success(message));
@@ -102,20 +102,17 @@ public class OrderController {
         return ResponseEntity.ok(items);
     }
 
-
-
     @Operation(summary = "Update order status", description = "Update the status of an order (Admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderDTO> updateOrderStatus(
             @PathVariable Long orderId,
             @Valid @RequestBody UpdateOrderStatusRequest request) {
-        
+
         OrderDTO orderDTO = orderService.updateOrderStatus(
-            orderId,
-            request.getStatus()
-        );
-        
+                orderId,
+                request.getStatus());
+
         return ResponseEntity.ok(orderDTO);
     }
 
