@@ -36,4 +36,18 @@ public class Cart {
 
     private Double totalPrice = 0.0;
 
+    /**
+     * Removes all items from the cart and resets the total price.
+     * Because 'orphanRemoval = true' is set on the cartItems relationship,
+     * this will also trigger the deletion of the CartItem entities from the
+     * database
+     * when the transaction is committed.
+     *
+     * WARNING: This method does NOT restore product quantities to the inventory.
+     */
+    public void clear() {
+        this.cartItems.clear();
+        this.totalPrice = 0.0;
+    }
+
 }

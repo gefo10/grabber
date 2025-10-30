@@ -12,6 +12,7 @@ import com.grabbler.payloads.exceptions.FieldError;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
@@ -59,6 +60,24 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 ErrorCode.INVALID_REQUEST.getCode(),
                 ex.getMessage(),
+                request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        String message = "Invalid JSON request body. Please check syntax and data types.";
+        if (ex.getMostSpecificCause() != null) {
+            message = "Invalid request: " + ex.getMostSpecificCause().getMessage();
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorCode.INVALID_REQUEST.getCode(),
+                message,
                 request.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
@@ -147,7 +166,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-
     // ==================== Conflict Errors (409) ====================
 
     @ExceptionHandler(DataIntegrityViolationException.class)

@@ -33,7 +33,7 @@ import com.grabbler.repositories.OrderRepository;
 
 import jakarta.transaction.Transactional;
 
-@Service
+@Service("orderService")
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -117,15 +117,18 @@ public class OrderServiceImpl implements OrderService {
             Product product = item.getProduct();
 
             // clear cart after order placement
-            cartService.deleteCartItem(user.getEmail(), item.getProduct().getProductId());
+            // cartService.deleteCartItem(user.getEmail(),
+            // item.getProduct().getProductId());
 
             productService.decreaseProductQuantity(product.getProductId(), quantity);
         });
 
+        cart.clear();
+
         OrderDTO orderDTO = modelMapper.map(savedOrder, OrderDTO.class);
-        orderItems.forEach(orderItem -> {
-            orderDTO.getOrderItems().add(modelMapper.map(orderItem, OrderItemDTO.class));
-        });
+        orderDTO.setEmail(user.getEmail());
+
+        orderDTO.getOrderItems().stream().map(item -> modelMapper.map(item, OrderItemDTO.class));
 
         return orderDTO;
 
@@ -139,6 +142,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+        orderDTO.setEmail(order.getUser().getEmail());
 
         return orderDTO;
     }
@@ -146,7 +150,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderDTO> getOrdersByUser(String emailId) {
         List<Order> orders = orderRepository.findAllByUserEmail(emailId);
-        List<OrderDTO> orderDTOs = orders.stream().map(order -> modelMapper.map(order, OrderDTO.class))
+        List<OrderDTO> orderDTOs = orders.stream().map(order -> {
+            OrderDTO dto = modelMapper.map(order, OrderDTO.class);
+            dto.setEmail(order.getUser().getEmail());
+            return dto;
+        })
                 .toList();
         if (orderDTOs.size() == 0) {
             throw new APIException("No orders found for user with emailId: " + emailId);
@@ -164,7 +172,11 @@ public class OrderServiceImpl implements OrderService {
 
         List<Order> orders = pageOrders.getContent();
 
-        List<OrderDTO> orderDTOs = orders.stream().map(order -> modelMapper.map(order, OrderDTO.class)).toList();
+        List<OrderDTO> orderDTOs = orders.stream().map(order -> {
+            OrderDTO dto = modelMapper.map(order, OrderDTO.class);
+            dto.setEmail(order.getUser().getEmail());
+            return dto;
+        }).toList();
 
         if (orderDTOs.size() == 0) {
             throw new APIException("No orders found");
@@ -235,6 +247,7 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItem item : order.getOrderItems()) {
             Product product = item.getProduct();
             product.setQuantity(product.getQuantity() + item.getQuantity());
+            productService.save(product);
 
             // Todo: update product repository
         }

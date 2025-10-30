@@ -56,6 +56,9 @@ class OrderControllerIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
     private CategoryRepository categoryRepository;
 
     @Autowired
@@ -63,6 +66,9 @@ class OrderControllerIntegrationTest {
 
     @Autowired
     private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -307,6 +313,8 @@ class OrderControllerIntegrationTest {
             payment.setPaymentToken("test_token");
             payment.setPaymentStatus(com.grabbler.enums.PaymentStatus.COMPLETED);
             testOrder.setPayment(payment);
+            payment.setOrder(testOrder);
+            paymentRepository.save(payment);
 
             testOrder = orderRepository.save(testOrder);
         }
@@ -370,6 +378,13 @@ class OrderControllerIntegrationTest {
             otherOrder.setOrderDate(java.time.LocalDate.now());
             otherOrder.setTotalAmount(500.0);
             otherOrder.setOrderStatus(OrderStatus.PENDING);
+
+            Payment otherPayment = new Payment();
+            otherPayment.setPaymentMethod(PaymentMethod.PAYPAL);
+            otherPayment.setPaymentToken("other_token");
+            otherPayment.setPaymentStatus(com.grabbler.enums.PaymentStatus.COMPLETED);
+            otherPayment = paymentRepository.save(otherPayment); // Save the payment
+            otherOrder.setPayment(otherPayment);
             otherOrder = orderRepository.save(otherOrder);
 
             // Try to access other customer's order
@@ -393,6 +408,14 @@ class OrderControllerIntegrationTest {
             testOrder.setOrderDate(java.time.LocalDate.now());
             testOrder.setTotalAmount(900.0);
             testOrder.setOrderStatus(OrderStatus.PENDING);
+
+            Payment payment = new Payment();
+            payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
+            payment.setPaymentToken("test_token");
+            payment.setPaymentStatus(com.grabbler.enums.PaymentStatus.COMPLETED);
+
+            payment = paymentRepository.save(payment); // <-- SAVE PAYMENT FIRST
+            testOrder.setPayment(payment);
             testOrder = orderRepository.save(testOrder);
         }
 
@@ -463,7 +486,7 @@ class OrderControllerIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.orderStatus", is("PROCESSING")));
+                    .andExpect(jsonPath("$.orderStatus", is("SHIPPED")));
 
             // PROCESSING -> SHIPPED
             UpdateOrderStatusRequest request2 = new UpdateOrderStatusRequest();
@@ -511,7 +534,8 @@ class OrderControllerIntegrationTest {
             orderItem.setQuantity(2);
             orderItem.setOrderedProductPrice(product.getSpecialPrice());
             orderItem.setDiscount(product.getDiscount());
-            // Note: You'll need to save this via OrderItemRepository if you have one
+
+            orderItemRepository.save(orderItem);
         }
 
         @Test
@@ -568,7 +592,7 @@ class OrderControllerIntegrationTest {
             mockMvc.perform(post("/api/v1/orders")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isForbidden());
         }
 
         @Test

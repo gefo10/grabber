@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grabbler.exceptions.APIException;
 import com.grabbler.models.User;
 
@@ -17,6 +18,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.grabbler.payloads.exceptions.*;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -27,6 +29,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    private final ObjectMapper objectMapper;
+
+    @Autowired 
+    public JwtRequestFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService, ObjectMapper objectMapper) {
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+        this.objectMapper = objectMapper;
+    }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -42,7 +52,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 email = jwtUtil.extractSubject(jwt);
             } catch (Exception e) {
                 logger.error("JWT token extraction failed: " + e.getMessage());
-                throw new APIException("Invalid JWT token: " + e.getMessage());
+                // throw new APIException("Invalid JWT token: " + e.getMessage());
+                // Create the same ErrorResponse your GlobalExceptionHandler would
+                ErrorResponse errorResponse = new ErrorResponse(
+                        ErrorCode.AUTHENTICATION_FAILED.getCode(),
+                        "Invalid JWT token: " + e.getMessage(),
+                        request.getRequestURI());
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                response.setContentType("application/json");
+
+                // Write the JSON response
+                objectMapper.writeValue(response.getWriter(), errorResponse);
+
+                return; // Stop the filter chain
             }
         }
 

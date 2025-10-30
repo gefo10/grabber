@@ -218,7 +218,7 @@ public class CartServiceImpl implements CartService {
 
         productService.save(product);
         cart.setTotalPrice(cartPrice);
-        cartItemRepository.deleteCartItemByProductIdAndCartId(cartItem.getCartItemId(), cart.getCartId());
+        cartItemRepository.deleteCartItemByProductIdAndCartId(cartItem.getProduct().getProductId(), cart.getCartId());
     }
 
     @Override
