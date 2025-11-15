@@ -6,6 +6,8 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue.svg?logo=postgresql)
 ![JWT](https://img.shields.io/badge/Security-JWT-black.svg?logo=jsonwebtokens)
 
+## NOTE 
+Frontend for this project is currently under development. This README covers only the backend API (for now).
 ## 1. Overview
 
 **Grabbler** is a complete, secure, and robust REST API backend for an e-commerce platform. It is built with **Spring Boot** and secured using **Spring Security** and **JSON Web Tokens (JWT)**.
