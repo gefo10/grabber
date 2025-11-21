@@ -85,10 +85,9 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(OrderStatus.valueOf("PENDING"));
 
         Payment payment = paymentService.processPayment(paymentDTO);
-
         order.setPayment(payment);
-
         Order savedOrder = orderRepository.save(order);
+
         List<CartItem> cartItems = cart.getCartItems();
 
         if (cartItems.size() == 0) {
@@ -107,22 +106,19 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setOrder(savedOrder);
 
             orderItems.add(orderItem);
+
+            // delete from Cart afterwards
+            int quantity = cartItem.getQuantity();
+            Product product = cartItem.getProduct();
+
+            productService.decreaseProductQuantity(product.getProductId(), quantity);
+
         }
 
         orderItems = orderItemRepository.saveAll(orderItems);
         savedOrder.setOrderItems(orderItems);
 
-        cart.getCartItems().forEach(item -> {
-            int quantity = item.getQuantity();
-            Product product = item.getProduct();
-
-            // clear cart after order placement
-            // cartService.deleteCartItem(user.getEmail(),
-            // item.getProduct().getProductId());
-
-            productService.decreaseProductQuantity(product.getProductId(), quantity);
-        });
-
+        // Clear cart after order is placed
         cart.clear();
 
         OrderDTO orderDTO = modelMapper.map(savedOrder, OrderDTO.class);
