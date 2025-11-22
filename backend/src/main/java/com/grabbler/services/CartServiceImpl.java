@@ -57,6 +57,9 @@ public class CartServiceImpl implements CartService {
             throw new APIException("Product" + productId + " has only " + product.getQuantity() + " items in stock");
         }
 
+        product.setQuantity(product.getQuantity() - quantity);
+        productService.save(product);
+
         CartItem newCartItem = new CartItem();
         newCartItem.setCart(cart);
         newCartItem.setProduct(product);
@@ -65,10 +68,6 @@ public class CartServiceImpl implements CartService {
         newCartItem.setDiscount(product.getDiscount());
 
         cartItemRepository.save(newCartItem);
-
-        // TODO : should i update productRepo and cartRepo here or not?!
-        product.setQuantity(product.getQuantity() - quantity);
-
         cart.setTotalPrice(cart.getTotalPrice() + (product.getSpecialPrice() * quantity));
 
         CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
@@ -136,6 +135,12 @@ public class CartServiceImpl implements CartService {
 
         if (cartItem == null) {
             throw new APIException("Product" + product.getProductName() + " does not exist in the cart");
+        }
+
+        int quantityDifference = quantity - cartItem.getQuantity();
+
+        if (quantityDifference > 0 && product.getQuantity() < quantityDifference) {
+            throw new APIException("Cannot update cart. Only " + product.getQuantity() + " items available in stock.");
         }
 
         double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
@@ -218,6 +223,8 @@ public class CartServiceImpl implements CartService {
 
         productService.save(product);
         cart.setTotalPrice(cartPrice);
+        cartRepository.save(cart);
+
         cartItemRepository.deleteCartItemByProductIdAndCartId(cartItem.getProduct().getProductId(), cart.getCartId());
     }
 

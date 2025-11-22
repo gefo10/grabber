@@ -76,6 +76,12 @@ public class OrderServiceImpl implements OrderService {
 
         Cart cart = cart_Optional.get();
 
+        List<CartItem> cartItems = cart.getCartItems();
+
+        if (cartItems.size() == 0) {
+            throw new APIException("Cart is empty");
+        }
+
         Order order = new Order();
 
         order.setUser(user);
@@ -87,12 +93,6 @@ public class OrderServiceImpl implements OrderService {
         Payment payment = paymentService.processPayment(paymentDTO);
         order.setPayment(payment);
         Order savedOrder = orderRepository.save(order);
-
-        List<CartItem> cartItems = cart.getCartItems();
-
-        if (cartItems.size() == 0) {
-            throw new APIException("Cart is empty");
-        }
 
         List<OrderItem> orderItems = new ArrayList<>();
 
