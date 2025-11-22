@@ -6,14 +6,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.transaction.Transactional;
 
 import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.Category;
@@ -24,6 +32,7 @@ import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.payloads.product.ProductResponse;
 import com.grabbler.payloads.product.UpdateProductRequest;
 import com.grabbler.repositories.ProductRepository;
+import com.grabbler.exceptions.APIException;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -42,6 +51,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     @Override
     public ProductDTO createProduct(CreateProductRequest request) {
@@ -107,7 +118,17 @@ public class ProductServiceImpl implements ProductService {
         return productResponse;
     }
 
+    @Recover
+    public ProductDTO recoverUpdateProduct(ObjectOptimisticLockingFailureException e,
+            Long productId, UpdateProductRequest request) {
+        log.error("Failed to update product {} after retries", productId, e);
+        throw new APIException(
+                "Unable to update product. It may have been modified by another user. Please refresh and try again.");
+    }
+
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
     public ProductDTO updateProduct(Long productId, UpdateProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
@@ -140,6 +161,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
     public ProductDTO partialUpdateProduct(Long productId, PatchProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
@@ -167,6 +190,14 @@ public class ProductServiceImpl implements ProductService {
 
         Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
+    }
+
+    @Recover
+    public ProductDTO recoverPartialUpdateProduct(ObjectOptimisticLockingFailureException e,
+            Long productId, PatchProductRequest request) {
+        log.error("Failed to partially update product {} after retries", productId, e);
+        throw new APIException(
+                "Unable to update product. It may have been modified by another user. Please refresh and try again.");
     }
 
     @Override
@@ -205,6 +236,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
     public boolean decreaseProductQuantity(Long productId, Integer quantity) {
         Optional<Product> optionalProduct = productRepository.findById(productId);
 
@@ -220,6 +253,13 @@ public class ProductServiceImpl implements ProductService {
         } else {
             throw new RuntimeException("Product not found with id: " + productId);
         }
+    }
+
+    @Recover
+    public boolean recoverDecreaseProductQuantity(ObjectOptimisticLockingFailureException e,
+            Long productId, Integer quantity) {
+        log.error("Failed to decrease product {} quantity after retries", productId, e);
+        throw new APIException("Unable to update inventory. Please try again.");
     }
 
     @Override
@@ -266,6 +306,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public Product save(Product product) {
         return productRepository.save(product);
     }

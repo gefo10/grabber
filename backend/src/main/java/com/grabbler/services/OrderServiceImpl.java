@@ -7,11 +7,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import com.grabbler.enums.OrderStatus;
@@ -56,6 +62,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    public static Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Override
     @Transactional
@@ -219,6 +227,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
     public String cancelOrder(Long orderId, Long userId) {
         Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
 
@@ -244,11 +254,16 @@ public class OrderServiceImpl implements OrderService {
             Product product = item.getProduct();
             product.setQuantity(product.getQuantity() + item.getQuantity());
             productService.save(product);
-
-            // Todo: update product repository
         }
 
         return "Order cancelled successfully";
+    }
+
+    @Recover
+    public String recoverCancelOrder(ObjectOptimisticLockingFailureException e,
+            Long orderId, Long userId) {
+        log.error("Failed to cancel order {} after retries", orderId, e);
+        throw new APIException("Unable to cancel order. Please try again.");
     }
 
     @Override

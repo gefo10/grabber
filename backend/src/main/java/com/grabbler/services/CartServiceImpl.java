@@ -6,7 +6,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import com.grabbler.exceptions.APIException;
@@ -35,7 +41,10 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private ModelMapper modelMapper;
 
+    private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
+
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
     @Transactional
     public CartDTO addProductToUserCart(String email, Long productId, Integer quantity) {
         Cart cart = cartRepository.findCartByUserEmail(email)
@@ -81,6 +90,13 @@ public class CartServiceImpl implements CartService {
         return cartDTO;
     }
 
+    @Recover
+    public CartDTO recoverAddProductToUserCart(ObjectOptimisticLockingFailureException e,
+                                               String email, Long productId, Integer quantity) {
+        log.error("Failed to add product {} to cart after retries for user: {}", productId, email, e);
+        throw new APIException("Unable to add product to cart. Another user may have purchased the last items. Please refresh and try again.");
+    }
+
     @Override
     public List<CartDTO> getAllCarts() {
         List<Cart> carts = cartRepository.findAll();
@@ -122,6 +138,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3,backoff =  @Backoff(delay = 1000, multiplier = 2))
     @Transactional
     public CartDTO updateCartItem(String userEmail, Long itemId,
             Integer quantity) {
@@ -165,7 +182,15 @@ public class CartServiceImpl implements CartService {
         return cartDTO;
     }
 
+    @Recover
+    public CartDTO recoverUpdateCartItem(ObjectOptimisticLockingFailureException e,
+                                        String userEmail, Long itemId, Integer quantity) {
+        log.error("Failed to update cart item {} after retries for user: {}", itemId, userEmail, e);
+        throw new APIException("Unable to update cart item. Inventory may have changed. Please refresh and try again.");
+    }
+
     @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
     @Transactional
     public String deleteCartItem(String email, Long cartItemId) {
         Cart cart = cartRepository.findCartByUserEmail(email)
@@ -179,6 +204,13 @@ public class CartServiceImpl implements CartService {
 
         deleteCartItemFromCart(cart, cartItem);
         return "Product" + cartItem.getProduct().getProductName() + " deleted from the cart";
+    }
+
+    @Recover
+    public String recoverDeleteCartItem(ObjectOptimisticLockingFailureException e,
+                                       String email, Long cartItemId) {
+        log.error("Failed to delete cart item {} after retries for user: {}", cartItemId, email, e);
+        throw new APIException("Unable to remove item from cart. Please refresh and try again.");
     }
 
     @Override
