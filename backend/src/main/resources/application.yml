@@ -18,7 +18,7 @@ spring:
 
 jwt:
   secret: b4AYNaI6lyiZZ4g9OQpmJnkqnna35FL0qJVFPWLEuno=
-  expiration: 86400000  # 1 day in milliseconds
+  expiration: 86400000 # 1 day in milliseconds
 
 server:
   port: 8080
@@ -40,6 +40,8 @@ logging:
 debug: true
 
 product:
-  image: 'src/main/resources/static/images'
+  image: "src/main/resources/static/images"
 
-
+  # Separate multiple domains with a comma
+  cors:
+    allowed-origins: "https://www.grabbler.com,https://admin.grabbler.com,http://localhost:3000"
