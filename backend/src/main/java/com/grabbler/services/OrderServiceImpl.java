@@ -86,8 +86,15 @@ public class OrderServiceImpl implements OrderService {
 
         List<CartItem> cartItems = cart.getCartItems();
 
-        if (cartItems.size() == 0) {
-            throw new APIException("Cart is empty");
+        if (cartItems.isEmpty()) {
+            throw new APIException("Cannot place order with empty cart.");
+        }
+
+        for (CartItem item : cartItems) {
+            Product product = productService.getProductById(item.getProduct().getProductId());
+            if (product.getQuantity() < item.getQuantity()) {
+                throw new APIException("Insufficient stock for product: " + product.getProductName() + ". Available: " + product.getQuantity() + ", Required: " + item.getQuantity());
+            }
         }
 
         Order order = new Order();
@@ -247,14 +254,14 @@ public class OrderServiceImpl implements OrderService {
             throw new APIException("Cannot cancel order that has been shipped or delivered");
         }
 
-        order.setOrderStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
-
         for (OrderItem item : order.getOrderItems()) {
             Product product = item.getProduct();
             product.setQuantity(product.getQuantity() + item.getQuantity());
             productService.save(product);
         }
+
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
 
         return "Order cancelled successfully";
     }
