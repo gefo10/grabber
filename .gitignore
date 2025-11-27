@@ -16,6 +16,8 @@ Thumbs.db
 logs/
 .env
 .env.*       # e.g. .env.local, .env.development
+# But keep the example file
+!.env.example
 
 .gradle
 
