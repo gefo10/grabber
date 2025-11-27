@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.models.media.Content;
 import jakarta.validation.Valid;
 
 @RestController
@@ -42,7 +43,7 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @Operation(summary = "Register a new user", description = "Creates a new user account with the provided details.", tags = {
-            "User Management" }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User registration details", required = true, content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserCreateDTO.class), examples = @ExampleObject(name = "User Registration Example", summary = "Example of user registration payload", value = """
+            "User Management" }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User registration details", required = true, content = @io.swagger.v3.oas.annotations.media.content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserCreateDTO.class), examples = @ExampleObject(name = "User Registration Example", summary = "Example of user registration payload", value = """
                     {
                         "firstName": "John",
                         "lastName": "Doe",
@@ -73,6 +74,13 @@ public class AuthController {
         return ResponseEntity.created(location).body(message);
     }
 
+    @Operation(summary = "Login as registered user", description = "Authenticates a registed user with email and password", tags = {
+            "User Management" }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Authentication Details", required = true, content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = AuthRequest.class), examples = @ExampleObject(name = "User Registration Example", summary = "Example of user registration payload", value = """
+                    {
+                        "email": "john.smith@example.com",
+                        "password": "SecureP@ssw0rd"
+                    }
+                    """))))
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody AuthRequest authRequest) {
         try {

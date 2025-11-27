@@ -60,10 +60,12 @@ public class UserServiceImpl implements UserService {
         Cart cart = new Cart();
         user.setCart(cart);
 
-        Role role = roleRepository.findByRoleName("ROLE_CUSTOMER").get();
+        Role role = roleRepository.findByRoleName("CUSTOMER").get();
         user.getRoles().add(role);
 
-        AddressDTO userCr = userCreateDTO.getAddresses().getFirst();
+        AddressDTO userCr = userCreateDTO.getAddresses().stream().findFirst()
+                .orElseThrow(() -> new APIException("Address not specified in UserCreateDTO;"));
+
         String country = userCr.getCountry();
         String city = userCr.getCity();
         String plz = userCr.getPostalCode();
@@ -93,9 +95,9 @@ public class UserServiceImpl implements UserService {
         User registeredUser = userRepository.save(user);
         cart.setUser(registeredUser);
 
-        UserDTO userDTO = modelMapper.map(registeredUser, UserDTO.class);
-        userDTO.setAddress(
-                modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
+        UserDTO userDTO = modelMapper.map(registeredUser,
+                UserDTO.class);
+        userDTO.setAddress(modelMapper.map(user.getAddresses().stream().findFirst().get(), AddressDTO.class));
 
         return userDTO;
     }
@@ -222,6 +224,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
         List<CartItem> cartItems = user.getCart().getCartItems();
+        Long cartId = user.getCart().getCartId();
 
         cartItems.forEach(cartItem -> {
             Long productId = cartItem.getProduct().getProductId();
