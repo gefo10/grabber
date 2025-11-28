@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    active: test
+  #profiles:
+  #  active: test
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -33,3 +33,13 @@ spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.se
 
 product:
   image: "target/test-images" # Or any dummy path valid for testing
+
+cors:
+  allowed-origins: http://localhost:3000
+
+stripe:
+  api-key: test_key
+  webhook-secret: test_secret
+
+server:
+  port: 0

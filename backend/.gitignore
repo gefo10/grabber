@@ -27,6 +27,8 @@ Thumbs.db
 # Spring Boot specific
 application-*.properties
 application-*.yml
+!application-test.properties
+!application-test.yml
 !application-production.properties
 !application-production.yml
 
