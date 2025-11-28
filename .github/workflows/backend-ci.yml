@@ -34,16 +34,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: 🧹 Clean build
-        run: ./gradlew clean
+        run: ./gradlew clean build
 
       - name: ✨ Check code formatting
         run: ./gradlew spotlessCheck
-
       - name: 🧪 Run tests
         run: ./gradlew test --info
-
-      - name: 🏗️ Build application
-        run: ./gradlew build -x test
 
       - name: 📊 Upload test results
         if: always()
