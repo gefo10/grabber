@@ -57,6 +57,16 @@ dependencies {
 
 }
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+compileJava {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
 spotless {
     java {
         // Use Google Java Format (industry standard)
