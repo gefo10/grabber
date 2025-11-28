@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Role {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roleId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long roleId;
 
-    private String roleName;
+  private String roleName;
 
-    @Override
-    public String toString() {
-        return this.roleName;
-    }
+  @Override
+  public String toString() {
+    return this.roleName;
+  }
 }

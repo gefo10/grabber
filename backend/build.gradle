@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.3'
 	id 'io.spring.dependency-management' version '1.1.4'
+    id 'com.diffplug.spotless' version '6.23.3'
 }
 
 group = 'com.grabbler'
@@ -54,6 +55,21 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
+}
+
+spotless {
+    java {
+        // Use Google Java Format (industry standard)
+        googleJavaFormat('1.18.1')
+        
+        // Additional cleanup
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        
+        // Don't format generated files
+        targetExclude 'build/**'
+    }
 }
 
 testing {

@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PatchProductRequest {
-    private String productName;
-    private String description;
-    private Double price;
-    private Integer quantity;
-    private Double discount;
+  private String productName;
+  private String description;
+  private Double price;
+  private Integer quantity;
+  private Double discount;
 }

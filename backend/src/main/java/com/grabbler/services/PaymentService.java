@@ -4,11 +4,11 @@ import com.grabbler.models.Payment;
 import com.grabbler.payloads.payment.*;
 
 public interface PaymentService {
-    Payment processPayment(PaymentDTO paymentDetails);
+  Payment processPayment(PaymentDTO paymentDetails);
 
-    Payment getPaymentDetails(Long paymentId);
+  Payment getPaymentDetails(Long paymentId);
 
-    boolean refundPayment(Long paymentId);
+  boolean refundPayment(Long paymentId);
 
-    void updatePaymentStatus(Long paymentId, String newStatus);
+  void updatePaymentStatus(Long paymentId, String newStatus);
 }

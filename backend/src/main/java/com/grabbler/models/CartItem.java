@@ -20,21 +20,21 @@ import lombok.ToString;
 @AllArgsConstructor
 public class CartItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cartItemId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long cartItemId;
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @ManyToOne
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @ManyToOne
+  @JoinColumn(name = "cart_id")
+  private Cart cart;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+  @ManyToOne
+  @JoinColumn(name = "product_id")
+  private Product product;
 
-    private Integer quantity;
-    private double productPrice;
-    private double discount;
+  private Integer quantity;
+  private double productPrice;
+  private double discount;
 }

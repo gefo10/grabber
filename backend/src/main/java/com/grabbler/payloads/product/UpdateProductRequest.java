@@ -12,21 +12,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateProductRequest {
-    @NotBlank(message = "Product name is required")
-    private String productName;
+  @NotBlank(message = "Product name is required")
+  private String productName;
 
-    @NotBlank(message = "Description is required")
-    private String description;
+  @NotBlank(message = "Description is required")
+  private String description;
 
-    @NotNull(message = "Price is required")
-    @Min(value = 0, message = "Price must be positive")
-    private Double price;
+  @NotNull(message = "Price is required")
+  @Min(value = 0, message = "Price must be positive")
+  private Double price;
 
-    @NotNull(message = "Quantity is required")
-    @Min(value = 0, message = "Quantity must be positive")
-    private Integer quantity;
+  @NotNull(message = "Quantity is required")
+  @Min(value = 0, message = "Quantity must be positive")
+  private Integer quantity;
 
-    @Min(value = 0, message = "Discount must be between 0 and 100")
-    @Max(value = 100, message = "Discount must be between 0 and 100")
-    private Double discount;
+  @Min(value = 0, message = "Discount must be between 0 and 100")
+  @Max(value = 100, message = "Discount must be between 0 and 100")
+  private Double discount;
 }

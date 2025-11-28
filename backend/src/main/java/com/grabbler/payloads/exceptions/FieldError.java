@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FieldError {
-    private String field;
-    private String message;
-    private Object rejectedValue;
+  private String field;
+  private String message;
+  private Object rejectedValue;
 
-    public FieldError(String field, String message) {
-        this.field = field;
-        this.message = message;
-    }
+  public FieldError(String field, String message) {
+    this.field = field;
+    this.message = message;
+  }
 }

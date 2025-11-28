@@ -1,7 +1,10 @@
 package com.grabbler.controllers;
 
+import com.grabbler.models.Address;
+import com.grabbler.payloads.address.*;
+import com.grabbler.services.AddressService;
+import jakarta.validation.Valid;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,56 +17,50 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.grabbler.models.Address;
-import com.grabbler.payloads.address.*;
-import com.grabbler.services.AddressService;
-
-import jakarta.validation.Valid;
-
 @RestController
 @RequestMapping("/api/v1/addresses")
 public class AddressController {
-    @Autowired
-    private AddressService addressService;
+  @Autowired private AddressService addressService;
 
-    @PostMapping
-    public ResponseEntity<AddressDTO> createAddress(@Valid @RequestBody AddressDTO addressDTO) {
-        AddressDTO address = addressService.createAddress(addressDTO);
+  @PostMapping
+  public ResponseEntity<AddressDTO> createAddress(@Valid @RequestBody AddressDTO addressDTO) {
+    AddressDTO address = addressService.createAddress(addressDTO);
 
-        return new ResponseEntity<AddressDTO>(address, HttpStatus.CREATED);
+    return new ResponseEntity<AddressDTO>(address, HttpStatus.CREATED);
+  }
+
+  @GetMapping
+  public ResponseEntity<List<AddressDTO>> getAddresses() {
+    List<AddressDTO> addressDTOs = addressService.getAllAddresses();
+
+    return new ResponseEntity<List<AddressDTO>>(addressDTOs, HttpStatus.OK);
+  }
+
+  @GetMapping("/{addressId}")
+  public ResponseEntity<AddressDTO> getAddress(@PathVariable Long addressId) {
+    AddressDTO addressDTO = addressService.getAddressById(addressId);
+    if (addressDTO == null) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping
-    public ResponseEntity<List<AddressDTO>> getAddresses() {
-        List<AddressDTO> addressDTOs = addressService.getAllAddresses();
+    return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
+  }
 
-        return new ResponseEntity<List<AddressDTO>>(addressDTOs, HttpStatus.OK);
+  @PutMapping("/{addressId}")
+  public ResponseEntity<AddressDTO> updateAddress(
+      @PathVariable Long addressId, @Valid @RequestBody Address address) {
+    AddressDTO addressDTO = addressService.updateAddress(addressId, address);
+    if (addressDTO == null) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/{addressId}")
-    public ResponseEntity<AddressDTO> getAddress(@PathVariable Long addressId) {
-        AddressDTO addressDTO = addressService.getAddressById(addressId);
-        if (addressDTO == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
+  }
 
-        return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
-    }
+  @DeleteMapping("/{addressId}")
+  public ResponseEntity<String> deleteAddress(@PathVariable Long addressId) {
+    addressService.deleteAddress(addressId);
 
-    @PutMapping("/{addressId}")
-    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Long addressId, @Valid @RequestBody Address address) {
-        AddressDTO addressDTO = addressService.updateAddress(addressId, address);
-        if (addressDTO == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        return new ResponseEntity<AddressDTO>(addressDTO, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{addressId}")
-    public ResponseEntity<String> deleteAddress(@PathVariable Long addressId) {
-        addressService.deleteAddress(addressId);
-
-        return new ResponseEntity<String>("Address deleted successfully", HttpStatus.OK);
-    }
+    return new ResponseEntity<String>("Address deleted successfully", HttpStatus.OK);
+  }
 }

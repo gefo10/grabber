@@ -5,16 +5,16 @@ import com.grabbler.payloads.category.*;
 
 public interface CategoryService {
 
-    CategoryDTO getCategoryById(Long categoryId);
+  CategoryDTO getCategoryById(Long categoryId);
 
-    Category findCategoryById(Long categoryId);
+  Category findCategoryById(Long categoryId);
 
-    CategoryDTO createCategory(Category category);
+  CategoryDTO createCategory(Category category);
 
-    CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+  CategoryResponse getCategories(
+      Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 
-    CategoryDTO updateCategory(Long categoryId, Category category);
+  CategoryDTO updateCategory(Long categoryId, Category category);
 
-    String deleteCategory(Long categoryId);
-
+  String deleteCategory(Long categoryId);
 }

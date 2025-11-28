@@ -9,8 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class UpdateCartItemRequest {
 
-    @NotNull
-    @Min(value = 1, message = "Quantity must be at least 1")
-    private Integer quantity;
-
+  @NotNull
+  @Min(value = 1, message = "Quantity must be at least 1")
+  private Integer quantity;
 }

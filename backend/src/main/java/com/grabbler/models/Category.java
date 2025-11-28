@@ -9,10 +9,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Entity
 @Data
@@ -21,14 +21,14 @@ import java.util.List;
 @AllArgsConstructor
 public class Category {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long categoryId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long categoryId;
 
-    @NotBlank
-    @Size(min = 6, message = "Category name must be at least 6 characters long")
-    private String categoryName;
+  @NotBlank
+  @Size(min = 6, message = "Category name must be at least 6 characters long")
+  private String categoryName;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    private List<Product> products;
+  @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+  private List<Product> products;
 }
