@@ -11,7 +11,6 @@ import com.grabbler.payloads.product.ProductResponse;
 import com.grabbler.payloads.product.UpdateProductRequest;
 import com.grabbler.repositories.ProductRepository;
 import com.stripe.exception.ApiException;
-
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
@@ -36,317 +35,335 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
+  @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private CategoryService categoryService;
+  @Autowired private CategoryService categoryService;
 
-    @Autowired
-    private FileService fileService;
+  @Autowired private FileService fileService;
 
-    @Value("${product.image}")
-    private String path;
+  @Value("${product.image}")
+  private String path;
 
-    @Autowired
-    private ModelMapper modelMapper;
+  @Autowired private ModelMapper modelMapper;
 
-    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
-    @Override
-    public ProductDTO createProduct(CreateProductRequest request) {
-        Category category = categoryService.findCategoryById(request.getCategoryId());
+  @Override
+  public ProductDTO createProduct(CreateProductRequest request) {
+    Category category = categoryService.findCategoryById(request.getCategoryId());
 
-        Product product = new Product();
-        product.setProductName(request.getProductName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setQuantity(request.getQuantity());
-        product.setDiscount(request.getDiscount());
-        product.setCategory(category);
+    Product product = new Product();
+    product.setProductName(request.getProductName());
+    product.setDescription(request.getDescription());
+    product.setPrice(request.getPrice());
+    product.setQuantity(request.getQuantity());
+    product.setDiscount(request.getDiscount());
+    product.setCategory(category);
 
-        // Calculate special price
-        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
-        product.setSpecialPrice(specialPrice);
+    // Calculate special price
+    double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+    product.setSpecialPrice(specialPrice);
 
-        Product savedProduct = productRepository.save(product);
+    Product savedProduct = productRepository.save(product);
 
-        return modelMapper.map(savedProduct, ProductDTO.class);
+    return modelMapper.map(savedProduct, ProductDTO.class);
+  }
+
+  @Override
+  public ProductResponse getAllProducts(
+      Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+
+    Sort sort =
+        (sortOrder.equalsIgnoreCase("asc"))
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
+
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+    Page<Product> productPage = productRepository.findAll(pageable);
+    List<Product> products = productPage.getContent();
+    List<ProductDTO> productDTOs =
+        products.stream()
+            .map(product -> modelMapper.map(product, ProductDTO.class))
+            .collect(Collectors.toList());
+
+    ProductResponse productResponse = new ProductResponse();
+    productResponse.setContent(productDTOs);
+    productResponse.setPageNumber(productPage.getNumber());
+    productResponse.setPageSize(productPage.getSize());
+    productResponse.setTotalElements(productPage.getTotalElements());
+    productResponse.setTotalPages(productPage.getTotalPages());
+    productResponse.setLastPage(productPage.isLast());
+
+    return productResponse;
+  }
+
+  @Override
+  public ProductResponse getProductsByCategory(
+      Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    Sort sort =
+        (sortOrder.equalsIgnoreCase("asc"))
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+    Page<Product> productPage = productRepository.findByCategoryCategoryId(categoryId, pageable);
+    List<Product> products = productPage.getContent();
+    List<ProductDTO> productDTOs =
+        products.stream()
+            .map(product -> modelMapper.map(product, ProductDTO.class))
+            .collect(Collectors.toList());
+    ProductResponse productResponse = new ProductResponse();
+    productResponse.setContent(productDTOs);
+    productResponse.setPageNumber(productPage.getNumber());
+    productResponse.setPageSize(productPage.getSize());
+    productResponse.setTotalElements(productPage.getTotalElements());
+    productResponse.setTotalPages(productPage.getTotalPages());
+    productResponse.setLastPage(productPage.isLast());
+    return productResponse;
+  }
+
+  @Recover
+  public ProductDTO recoverUpdateProduct(
+      Exception e, Long productId, UpdateProductRequest request) {
+    if (e instanceof ResourceNotFoundException) {
+      throw (ResourceNotFoundException) e;
     }
 
-    @Override
-    public ProductResponse getAllProducts(
-            Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-
-        Sort sort = (sortOrder.equalsIgnoreCase("asc"))
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Product> productPage = productRepository.findAll(pageable);
-        List<Product> products = productPage.getContent();
-        List<ProductDTO> productDTOs = products.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .collect(Collectors.toList());
-
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOs);
-        productResponse.setPageNumber(productPage.getNumber());
-        productResponse.setPageSize(productPage.getSize());
-        productResponse.setTotalElements(productPage.getTotalElements());
-        productResponse.setTotalPages(productPage.getTotalPages());
-        productResponse.setLastPage(productPage.isLast());
-
-        return productResponse;
+    if (e instanceof ApiException) {
+      throw (APIException) e;
     }
 
-    @Override
-    public ProductResponse getProductsByCategory(
-            Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sort = (sortOrder.equalsIgnoreCase("asc"))
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Product> productPage = productRepository.findByCategoryCategoryId(categoryId, pageable);
-        List<Product> products = productPage.getContent();
-        List<ProductDTO> productDTOs = products.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .collect(Collectors.toList());
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOs);
-        productResponse.setPageNumber(productPage.getNumber());
-        productResponse.setPageSize(productPage.getSize());
-        productResponse.setTotalElements(productPage.getTotalElements());
-        productResponse.setTotalPages(productPage.getTotalPages());
-        productResponse.setLastPage(productPage.isLast());
-        return productResponse;
+    log.error("Failed to update product {} after retries", productId, e);
+    throw new APIException(
+        "Unable to update product. It may have been modified by another user. Please refresh and try again.");
+  }
+
+  @Override
+  @Retryable(
+      retryFor = ObjectOptimisticLockingFailureException.class,
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 1000, multiplier = 2))
+  @Transactional
+  public ProductDTO updateProduct(Long productId, UpdateProductRequest request) {
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+    product.setProductName(request.getProductName());
+    product.setDescription(request.getDescription());
+    product.setPrice(request.getPrice());
+    product.setQuantity(request.getQuantity());
+    // existingProduct.setImage(request.getImage());
+
+    double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+    product.setSpecialPrice(specialPrice);
+
+    Product updatedProduct = productRepository.save(product);
+    return modelMapper.map(updatedProduct, ProductDTO.class);
+  }
+
+  @Override
+  public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+
+    Product existingProduct =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+    String fileName = fileService.uploadImage(path, image);
+
+    existingProduct.setImage(fileName);
+
+    Product updatedProduct = productRepository.save(existingProduct);
+    return modelMapper.map(updatedProduct, ProductDTO.class);
+  }
+
+  @Override
+  @Retryable(
+      retryFor = ObjectOptimisticLockingFailureException.class,
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 1000, multiplier = 2))
+  @Transactional
+  public ProductDTO partialUpdateProduct(Long productId, PatchProductRequest request) {
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+    // Only update fields that are provided
+    if (request.getProductName() != null) {
+      product.setProductName(request.getProductName());
+    }
+    if (request.getDescription() != null) {
+      product.setDescription(request.getDescription());
+    }
+    if (request.getPrice() != null) {
+      product.setPrice(request.getPrice());
+    }
+    if (request.getQuantity() != null) {
+      product.setQuantity(request.getQuantity());
+    }
+    if (request.getDiscount() != null) {
+      product.setDiscount(request.getDiscount());
     }
 
-    @Recover
-    public ProductDTO recoverUpdateProduct(
-            Exception e, Long productId, UpdateProductRequest request) {
-        if (e instanceof ResourceNotFoundException) {
-            throw (ResourceNotFoundException) e;
-        }
+    // Recalculate special price
+    double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
+    product.setSpecialPrice(specialPrice);
 
-        if (e instanceof ApiException) {
-            throw (APIException) e;
-        }
+    Product updatedProduct = productRepository.save(product);
+    return modelMapper.map(updatedProduct, ProductDTO.class);
+  }
 
-        log.error("Failed to update product {} after retries", productId, e);
-        throw new APIException(
-                "Unable to update product. It may have been modified by another user. Please refresh and try again.");
+  @Recover
+  public ProductDTO recoverPartialUpdateProduct(
+      Exception e, Long productId, PatchProductRequest request) {
+    if (e instanceof ResourceNotFoundException) {
+      throw (ResourceNotFoundException) e;
     }
-
-    @Override
-    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
-    @Transactional
-    public ProductDTO updateProduct(Long productId, UpdateProductRequest request) {
-        Product product = productRepository
-                .findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
-
-        product.setProductName(request.getProductName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setQuantity(request.getQuantity());
-        // existingProduct.setImage(request.getImage());
-
-        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
-        product.setSpecialPrice(specialPrice);
-
-        Product updatedProduct = productRepository.save(product);
-        return modelMapper.map(updatedProduct, ProductDTO.class);
+    if (e instanceof APIException) {
+      throw (APIException) e;
     }
+    log.error("Failed to partially update product {} after retries", productId, e);
+    throw new APIException(
+        "Unable to update product. It may have been modified by another user. Please refresh and try again.");
+  }
 
-    @Override
-    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+  @Override
+  public ProductResponse searchProductByKeyword(
+      String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    Sort sort =
+        (sortOrder.equalsIgnoreCase("asc"))
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+    Page<Product> productPage = productRepository.findByKeyword(keyword, pageable);
+    List<Product> products = productPage.getContent();
+    List<ProductDTO> productDTOs =
+        products.stream()
+            .map(product -> modelMapper.map(product, ProductDTO.class))
+            .collect(Collectors.toList());
+    ProductResponse productResponse = new ProductResponse();
+    productResponse.setContent(productDTOs);
+    productResponse.setPageNumber(productPage.getNumber());
+    productResponse.setPageSize(productPage.getSize());
+    productResponse.setTotalElements(productPage.getTotalElements());
+    productResponse.setTotalPages(productPage.getTotalPages());
+    productResponse.setLastPage(productPage.isLast());
+    return productResponse;
+  }
 
-        Product existingProduct = productRepository
-                .findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+  @Override
+  public String deleteProduct(Long productId) {
+    Product existingProduct =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        String fileName = fileService.uploadImage(path, image);
+    productRepository.delete(existingProduct);
+    return "Product deleted successfully";
+  }
 
-        existingProduct.setImage(fileName);
+  @Override
+  public Product getProductById(Long productId) {
+    return productRepository
+        .findById(productId)
+        .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+  }
 
-        Product updatedProduct = productRepository.save(existingProduct);
-        return modelMapper.map(updatedProduct, ProductDTO.class);
+  @Override
+  @Retryable(
+      retryFor = ObjectOptimisticLockingFailureException.class,
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 1000, multiplier = 2))
+  @Transactional
+  public boolean decreaseProductQuantity(Long productId, Integer quantity) {
+    Optional<Product> optionalProduct = productRepository.findById(productId);
+
+    if (optionalProduct.isPresent()) {
+      Product product = optionalProduct.get();
+      if (product.getQuantity() >= quantity) {
+        product.setQuantity(product.getQuantity() - quantity);
+        productRepository.save(product);
+        return true;
+      } else {
+        throw new RuntimeException("Insufficient product quantity for product id: " + productId);
+      }
+    } else {
+      throw new RuntimeException("Product not found with id: " + productId);
     }
+  }
 
-    @Override
-    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
-    @Transactional
-    public ProductDTO partialUpdateProduct(Long productId, PatchProductRequest request) {
-        Product product = productRepository
-                .findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
-
-        // Only update fields that are provided
-        if (request.getProductName() != null) {
-            product.setProductName(request.getProductName());
-        }
-        if (request.getDescription() != null) {
-            product.setDescription(request.getDescription());
-        }
-        if (request.getPrice() != null) {
-            product.setPrice(request.getPrice());
-        }
-        if (request.getQuantity() != null) {
-            product.setQuantity(request.getQuantity());
-        }
-        if (request.getDiscount() != null) {
-            product.setDiscount(request.getDiscount());
-        }
-
-        // Recalculate special price
-        double specialPrice = product.getPrice() - (product.getPrice() * product.getDiscount() / 100);
-        product.setSpecialPrice(specialPrice);
-
-        Product updatedProduct = productRepository.save(product);
-        return modelMapper.map(updatedProduct, ProductDTO.class);
+  @Recover
+  public boolean recoverDecreaseProductQuantity(Exception e, Long productId, Integer quantity) {
+    if (e instanceof ResourceNotFoundException) {
+      throw (ResourceNotFoundException) e;
     }
-
-    @Recover
-    public ProductDTO recoverPartialUpdateProduct(
-            Exception e, Long productId, PatchProductRequest request) {
-        if (e instanceof ResourceNotFoundException) {
-            throw (ResourceNotFoundException) e;
-        }
-        if (e instanceof APIException) {
-            throw (APIException) e;
-        }
-        log.error("Failed to partially update product {} after retries", productId, e);
-        throw new APIException(
-                "Unable to update product. It may have been modified by another user. Please refresh and try again.");
+    if (e instanceof APIException) {
+      throw (APIException) e;
     }
+    log.error("Failed to decrease product {} quantity after retries", productId, e);
+    throw new APIException("Unable to update inventory. Please try again.");
+  }
 
-    @Override
-    public ProductResponse searchProductByKeyword(
-            String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sort = (sortOrder.equalsIgnoreCase("asc"))
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Product> productPage = productRepository.findByKeyword(keyword, pageable);
-        List<Product> products = productPage.getContent();
-        List<ProductDTO> productDTOs = products.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .collect(Collectors.toList());
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOs);
-        productResponse.setPageNumber(productPage.getNumber());
-        productResponse.setPageSize(productPage.getSize());
-        productResponse.setTotalElements(productPage.getTotalElements());
-        productResponse.setTotalPages(productPage.getTotalPages());
-        productResponse.setLastPage(productPage.isLast());
-        return productResponse;
-    }
+  @Override
+  public String deleteProductImage(Long productId) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'deleteProductImage'");
+  }
 
-    @Override
-    public String deleteProduct(Long productId) {
-        Product existingProduct = productRepository
-                .findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+  @Override
+  public ProductResponse getProductsByPriceRange(
+      Double minPrice,
+      Double maxPrice,
+      Integer pageNumber,
+      Integer pageSize,
+      String sortBy,
+      String sortOrder) {
 
-        productRepository.delete(existingProduct);
-        return "Product deleted successfully";
-    }
+    Sort sort =
+        sortOrder.equalsIgnoreCase("asc")
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
 
-    @Override
-    public Product getProductById(Long productId) {
-        return productRepository
-                .findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-    }
+    Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-    @Override
-    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
-    @Transactional
-    public boolean decreaseProductQuantity(Long productId, Integer quantity) {
-        Optional<Product> optionalProduct = productRepository.findById(productId);
+    Page<Product> productPage =
+        productRepository.findByPriceRange(
+            minPrice != null ? minPrice : 0.0,
+            maxPrice != null ? maxPrice : Double.MAX_VALUE,
+            pageable);
 
-        if (optionalProduct.isPresent()) {
-            Product product = optionalProduct.get();
-            if (product.getQuantity() >= quantity) {
-                product.setQuantity(product.getQuantity() - quantity);
-                productRepository.save(product);
-                return true;
-            } else {
-                throw new RuntimeException("Insufficient product quantity for product id: " + productId);
-            }
-        } else {
-            throw new RuntimeException("Product not found with id: " + productId);
-        }
-    }
+    List<Product> products = productPage.getContent();
+    List<ProductDTO> productDTOs =
+        products.stream()
+            .map(product -> modelMapper.map(product, ProductDTO.class))
+            .collect(Collectors.toList());
 
-    @Recover
-    public boolean recoverDecreaseProductQuantity(
-            Exception e, Long productId, Integer quantity) {
-        if (e instanceof ResourceNotFoundException) {
-            throw (ResourceNotFoundException) e;
-        }
-        if (e instanceof APIException) {
-            throw (APIException) e;
-        }
-        log.error("Failed to decrease product {} quantity after retries", productId, e);
-        throw new APIException("Unable to update inventory. Please try again.");
-    }
+    ProductResponse productResponse = new ProductResponse();
+    productResponse.setContent(productDTOs);
+    productResponse.setPageSize(productPage.getSize());
+    productResponse.setPageNumber(productPage.getNumber());
+    productResponse.setTotalPages(productPage.getTotalPages());
+    productResponse.setLastPage(productPage.isLast());
+    productResponse.setTotalElements(productResponse.getTotalElements());
 
-    @Override
-    public String deleteProductImage(Long productId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteProductImage'");
-    }
+    return productResponse;
+  }
 
-    @Override
-    public ProductResponse getProductsByPriceRange(
-            Double minPrice,
-            Double maxPrice,
-            Integer pageNumber,
-            Integer pageSize,
-            String sortBy,
-            String sortOrder) {
+  @Override
+  public ProductDTO getProductDTOById(Long productId) {
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        Sort sort = sortOrder.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+    return modelMapper.map(product, ProductDTO.class);
+  }
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<Product> productPage = productRepository.findByPriceRange(
-                minPrice != null ? minPrice : 0.0,
-                maxPrice != null ? maxPrice : Double.MAX_VALUE,
-                pageable);
-
-        List<Product> products = productPage.getContent();
-        List<ProductDTO> productDTOs = products.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .collect(Collectors.toList());
-
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOs);
-        productResponse.setPageSize(productPage.getSize());
-        productResponse.setPageNumber(productPage.getNumber());
-        productResponse.setTotalPages(productPage.getTotalPages());
-        productResponse.setLastPage(productPage.isLast());
-        productResponse.setTotalElements(productResponse.getTotalElements());
-
-        return productResponse;
-    }
-
-    @Override
-    public ProductDTO getProductDTOById(Long productId) {
-        Product product = productRepository
-                .findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
-
-        return modelMapper.map(product, ProductDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public Product save(Product product) {
-        return productRepository.save(product);
-    }
+  @Override
+  @Transactional
+  public Product save(Product product) {
+    return productRepository.save(product);
+  }
 }
