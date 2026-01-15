@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { useHistory } from 'react-router-dom';
+import { useAppSelector } from '@/store/hooks';
+import { useNavigate } from 'react-router-dom';
 
 export interface ChatMessage {
     id: number;
@@ -12,9 +12,10 @@ export interface ChatMessage {
 
 const Chat: React.FC = () => {
 
-    
+
     const messages = useAppSelector((state) => state.messages);
-    const dispatch = useAppDispatch();
+    //const dispatch = useAppDispatch();
+    //const navigate = useNavigate();
 
     const [formData, setFormData] = useState({});
 
@@ -26,8 +27,10 @@ const Chat: React.FC = () => {
         event.preventDefault();
 
         const dataToSubmit = { ...formData };
+        console.log("Sending:", dataToSubmit);
 
-        history.push('/chat');
+        //TODO: dispatch(sendMessage(dataToSubmit));
+
     }
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [event.target.name]: event.target.value });
@@ -35,13 +38,13 @@ const Chat: React.FC = () => {
 
     return (
         <div className="chat">
-        <p>Chat</p>
+            <p>Chat</p>
             <ul id="messages">
-                { messages.map((message) => (
+                {messages.map((message) => (
                     <li key={message.id}>{message.user_id}: {message.content}</li>
-                )) }
+                ))}
             </ul>
-            <form action="http://localhost:8080"> 
+            <form onSubmit={handleSubmit}>
                 <input id="message-input" type="text" name="messageInput" onChange={handleInputChange} />
                 <button type="submit">Send</button>
             </form>
