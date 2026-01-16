@@ -1,10 +1,15 @@
 import './App.css';
-import Chat from './components/Chat';
+import ProductList from './components/ProductList';
 
 function App() {
     return (
         <div className="App">
-            <Chat />
+            <header>
+                <h1>My Awesome Shop</h1>
+            </header>
+            <main>
+                <ProductList />
+            </main>
         </div>
     );
 }

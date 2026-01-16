@@ -1,38 +1,52 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Product } from '@/types/Product';
+import { Product, ProductQueryParams, ProductResponse } from '@/types/Product';
 import { fetchProducts } from '@/services/product.service';
 
 interface ProductState {
-    items: Product[],
-    status: 'idle' | 'loading' | 'failed';
+    items: Product[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
 
 const initialState: ProductState = {
     items: [],
+    totalElements: 0,
+    totalPages: 0,
+    currentPage: 0,
     status: 'idle',
 };
 
-export const loadProducts = createAsyncThunk(
+export const loadProducts = createAsyncThunk<ProductResponse, ProductQueryParams> (
     'products/load',
-    async () => {
-        const products = fetchProducts();
-        return products;
+    async (params)  => {
+        const response = fetchProducts(params);
+        return response;
     }
 );
 
 
 const productSlice = createSlice({
-    name: 'products',
+    name: 'productResponse',
     initialState,
-    reducers: {},
+    reducers: {
+        resetProducts: (state) => {
+            state.items = [];
+            state.status = 'idle';
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(loadProducts.pending, (state) => {
                 state.status = 'loading';
             })
-            .addCase(loadProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-                state.status = 'idle';
-                state.items = action.payload;
+            .addCase(loadProducts.fulfilled, (state, action: PayloadAction<ProductResponse>) => {
+                state.status = 'succeeded';
+                state.items = action.payload.content;
+                state.totalElements = action.payload.totalElements;
+                state.totalPages = action.payload.totalPages;
+                state.currentPage = action.payload.pageNumber;
             })
             .addCase(loadProducts.rejected, (state) => {
                 state.status = 'failed';
@@ -40,4 +54,6 @@ const productSlice = createSlice({
     },
 });
 
+export const { resetProducts } = productSlice.actions; 
 export default productSlice.reducer;
+
