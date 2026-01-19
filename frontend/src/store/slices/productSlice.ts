@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Product, ProductQueryParams, ProductResponse } from '@/types/Product';
+import { Product, ProductQueryParams, ProductResponse } from '@/types';
 import { fetchProducts } from '@/services/product.service';
 
 interface ProductState {
@@ -18,9 +18,9 @@ const initialState: ProductState = {
     status: 'idle',
 };
 
-export const loadProducts = createAsyncThunk<ProductResponse, ProductQueryParams> (
+export const loadProducts = createAsyncThunk<ProductResponse, ProductQueryParams>(
     'products/load',
-    async (params)  => {
+    async (params) => {
         const response = fetchProducts(params);
         return response;
     }
@@ -54,6 +54,6 @@ const productSlice = createSlice({
     },
 });
 
-export const { resetProducts } = productSlice.actions; 
+export const { resetProducts } = productSlice.actions;
 export default productSlice.reducer;
 

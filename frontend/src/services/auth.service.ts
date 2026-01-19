@@ -1,35 +1,18 @@
-import axios from 'axios';
+import api from "@/utils/api";
+import { LoginCredentials, AuthResponse, RegisterUserRequest } from "@/types";
 
-const API_URL = 'http://localhost:8080/api/auth/';
 
-export const register = async (username: string, email: string, password: string) => {
-    return axios.post(API_URL + 'signup', {
-        username,
-        email,
-        password
-    });
-}
-
-export const login = async (username: string, password: string) => {
-    return axios.post(API_URL + 'signin', {
-        username,
-        password
-    }).then((response) => {
-        if (response.data.accessToken) {
-            localStorage.setItem('user', JSON.stringify(response.data));
-        }
+const authService = {
+    login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+        const response = await api.post('auth/login', credentials);
         return response.data;
-    });
-}
+    },
+    register: async (userData: RegisterUserRequest) => {
+        const response = await api.post('auth/register', userData);
+        return response.data;
+    },
+};
 
-export const logout = () => {
-    localStorage.removeItem('user');
-}
+export default authService;
 
-export const getCurrentUser = () => {
-    const user = localStorage.getItem('user');
-    if (user) {
-        return JSON.parse(user);
-    }
-    return null;
-}
+

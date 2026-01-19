@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux';
-import messageReducer from './slices/messageSlice';
 import productReducer from './slices/productSlice';
+import authReducer from '@/features/auth/authSlice';
 
 const rootReducer = combineReducers({
-    messages: messageReducer,
     products: productReducer,
+    auth: authReducer,
 });
 
 
