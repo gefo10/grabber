@@ -8,6 +8,7 @@ import com.grabbler.exceptions.APIException;
 import com.grabbler.exceptions.ResourceNotFoundException;
 import com.grabbler.models.*;
 import com.grabbler.payloads.cart.CartDTO;
+import com.grabbler.payloads.cart.CartItemDTO;
 import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
@@ -42,6 +43,7 @@ class CartServiceImplTest {
   private Product product1;
   private Product product2;
   private CartItem cartItem1;
+  private CartItemDTO cartItem1DTO;
   private CartDTO cartDTO;
   private ProductDTO productDTO1;
 
@@ -67,7 +69,8 @@ class CartServiceImplTest {
     cart.getCartItems().add(cartItem1);
 
     productDTO1 = new ProductDTO(1L, "Laptop", "img.jpg", "Fast Laptop", 10, 1500.0, 10.0, 1350.0);
-    cartDTO = new CartDTO(1L, 1350.0, List.of(productDTO1));
+    cartItem1DTO= new CartItemDTO(1L, cartDTO, productDTO1, 2, 0.0, 199.99);
+    cartDTO = new CartDTO(1L, 1350.0, List.of(cartItem1DTO));
   }
 
   @Test

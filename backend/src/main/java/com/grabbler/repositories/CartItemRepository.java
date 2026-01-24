@@ -11,14 +11,20 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-  @Query("SELECT ci.product FROM CartItem ci WHERE ci.product.productId = ?1")
-  Product findByProductId(Long productId);
+    CartItem findByCartItemId(Long cartItemId);
 
-  @Query("SELECT ci FROM CartItem ci WHERE ci.product.productId = ?1 And ci.cart.cartId = ?2")
-  CartItem findCartItemByProductIdAndCartId(Long productId, Long cartId);
+    @Query("SELECT ci.product FROM CartItem ci WHERE ci.product.productId = ?1")
+    Product findByProductId(Long productId);
 
-  @Modifying
-  @Transactional
-  @Query("DELETE FROM CartItem ci WHERE ci.product.productId = ?1 And ci.cart.cartId = ?2")
-  void deleteCartItemByProductIdAndCartId(Long productId, Long cartId);
+    @Query("SELECT ci FROM CartItem ci WHERE ci.product.productId = ?1 And ci.cart.cartId = ?2")
+    CartItem findCartItemByProductIdAndCartId(Long productId, Long cartId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM CartItem ci WHERE ci.product.productId = ?1 And ci.cart.cartId = ?2")
+    void deleteCartItemByProductIdAndCartId(Long productId, Long cartId);
+
+    @Modifying
+    @Transactional
+    void deleteCartItemByCartItemId(Long cartItemId);
 }

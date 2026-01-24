@@ -6,6 +6,7 @@ import com.grabbler.models.Cart;
 import com.grabbler.models.CartItem;
 import com.grabbler.models.Product;
 import com.grabbler.payloads.cart.CartDTO;
+import com.grabbler.payloads.cart.CartItemDTO;
 import com.grabbler.payloads.product.ProductDTO;
 import com.grabbler.repositories.CartItemRepository;
 import com.grabbler.repositories.CartRepository;
@@ -27,266 +28,266 @@ import org.springframework.stereotype.Service;
 @Service
 public class CartServiceImpl implements CartService {
 
-  @Autowired private CartRepository cartRepository;
+    @Autowired
+    private CartRepository cartRepository;
 
-  @Autowired private ProductService productService;
+    @Autowired
+    private ProductService productService;
 
-  @Autowired private CartItemRepository cartItemRepository;
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
-  @Autowired private ModelMapper modelMapper;
+    @Autowired
+    private ModelMapper modelMapper;
 
-  private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
 
-  @Override
-  @Retryable(
-      retryFor = ObjectOptimisticLockingFailureException.class,
-      maxAttempts = 3,
-      backoff = @Backoff(delay = 1000, multiplier = 2))
-  @Transactional
-  public CartDTO addProductToUserCart(String email, Long productId, Integer quantity) {
-    Cart cart =
-        cartRepository
-            .findCartByUserEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
+    @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
+    public CartDTO addProductToUserCart(String email, Long productId, Integer quantity) {
+        Cart cart = cartRepository
+                .findCartByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
 
-    Product product = productService.getProductById(productId);
+        Product product = productService.getProductById(productId);
 
-    CartItem cartItem =
-        cartItemRepository.findCartItemByProductIdAndCartId(productId, cart.getCartId());
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(productId, cart.getCartId());
 
-    if (cartItem != null) {
-      throw new APIException("Product" + productId + " already exists in the cart");
-    }
+        if (cartItem != null) {
+            throw new APIException("Product" + productId + " already exists in the cart");
+        }
 
-    if (product.getQuantity() == 0) {
-      throw new APIException("Product" + productId + " is out of stock");
-    }
+        if (product.getQuantity() == 0) {
+            throw new APIException("Product" + productId + " is out of stock");
+        }
 
-    if (product.getQuantity() < quantity) {
-      throw new APIException(
-          "Product" + productId + " has only " + product.getQuantity() + " items in stock");
-    }
+        if (product.getQuantity() < quantity) {
+            throw new APIException(
+                    "Product" + productId + " has only " + product.getQuantity() + " items in stock");
+        }
 
-    product.setQuantity(product.getQuantity() - quantity);
-    productService.save(product);
+        product.setQuantity(product.getQuantity() - quantity);
+        productService.save(product);
 
-    CartItem newCartItem = new CartItem();
-    newCartItem.setCart(cart);
-    newCartItem.setProduct(product);
-    newCartItem.setQuantity(quantity);
-    newCartItem.setProductPrice(product.getSpecialPrice());
-    newCartItem.setDiscount(product.getDiscount());
+        CartItem newCartItem = new CartItem();
+        newCartItem.setCart(cart);
+        newCartItem.setProduct(product);
+        newCartItem.setQuantity(quantity);
+        newCartItem.setProductPrice(product.getSpecialPrice());
+        newCartItem.setDiscount(product.getDiscount());
 
-    cartItemRepository.save(newCartItem);
-    cart.setTotalPrice(cart.getTotalPrice() + (product.getSpecialPrice() * quantity));
+        cartItemRepository.save(newCartItem);
+        cart.setTotalPrice(cart.getTotalPrice() + (product.getSpecialPrice() * quantity));
 
-    CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
-    List<ProductDTO> productDTOs =
-        cart.getCartItems().stream()
-            .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
-            .collect(Collectors.toList());
-
-    cartDTO.setProducts(productDTOs);
-
-    return cartDTO;
-  }
-
-  @Recover
-  public CartDTO recoverAddProductToUserCart(
-      Exception e, String email, Long productId, Integer quantity) {
-    log.error("Failed to add product {} to cart after retries for user: {}", productId, email, e);
-    throw new APIException(
-        "Unable to add product to cart. Another user may have purchased the last items. Please refresh and try again.");
-  }
-
-  @Override
-  public List<CartDTO> getAllCarts() {
-    List<Cart> carts = cartRepository.findAll();
-
-    if (carts.isEmpty()) {
-      throw new APIException("No carts found");
-    }
-
-    List<CartDTO> cartDTOs =
-        carts.stream()
-            .map(
-                c -> {
-                  CartDTO cartDTO = modelMapper.map(c, CartDTO.class);
-                  List<ProductDTO> productDTOs =
-                      c.getCartItems().stream()
-                          .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
-                          .collect(Collectors.toList());
-                  cartDTO.setProducts(productDTOs);
-                  return cartDTO;
+        List<CartItemDTO> itemDTOs = cart.getCartItems().stream()
+                .map(item -> {
+                    ProductDTO pDto = modelMapper.map(item.getProduct(), ProductDTO.class);
+                    return new CartItemDTO(item.getCartItemId(), pDto, item.getQuantity(), item.getDiscount(), item.getProductPrice(), item.getProductPrice() * item.getQuantity());
                 })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
-    return cartDTOs;
-  }
+        cartDTO.setCartItems(itemDTOs);
 
-  @Override
-  public CartDTO getCartByEmail(String email) {
-    Optional<Cart> cart_Optional = cartRepository.findCartByUserEmail(email);
-
-    if (cart_Optional.isEmpty()) {
-      throw new ResourceNotFoundException("Cart", "email", email);
+        return cartDTO;
     }
 
-    Cart cart = cart_Optional.get();
-
-    CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-    List<ProductDTO> productDTOs =
-        cart.getCartItems().stream()
-            .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
-            .collect(Collectors.toList());
-
-    cartDTO.setProducts(productDTOs);
-
-    return cartDTO;
-  }
-
-  @Override
-  @Retryable(
-      retryFor = ObjectOptimisticLockingFailureException.class,
-      maxAttempts = 3,
-      backoff = @Backoff(delay = 1000, multiplier = 2))
-  @Transactional
-  public CartDTO updateCartItem(String userEmail, Long itemId, Integer quantity) {
-
-    Cart cart =
-        cartRepository
-            .findCartByUserEmail(userEmail)
-            .orElseThrow(() -> new ResourceNotFoundException("Cart", "user email", userEmail));
-
-    Product product = productService.getProductById(itemId);
-
-    CartItem cartItem =
-        cartItemRepository.findCartItemByProductIdAndCartId(itemId, cart.getCartId());
-
-    if (cartItem == null) {
-      throw new APIException("Product" + product.getProductName() + " does not exist in the cart");
+    @Recover
+    public CartDTO recoverAddProductToUserCart(
+            Exception e, String email, Long productId, Integer quantity) {
+        log.error("Failed to add product {} to cart after retries for user: {}", productId, email, e);
+        throw new APIException(
+                "Unable to add product to cart. Another user may have purchased the last items. Please refresh and try again.");
     }
 
-    int quantityDifference = quantity - cartItem.getQuantity();
+    @Override
+    public List<CartDTO> getAllCarts() {
+        List<Cart> carts = cartRepository.findAll();
 
-    if (quantityDifference > 0 && product.getQuantity() < quantityDifference) {
-      throw new APIException(
-          "Cannot update cart. Only " + product.getQuantity() + " items available in stock.");
+        if (carts.isEmpty()) {
+            throw new APIException("No carts found");
+        }
+
+        List<CartDTO> cartDTOs = carts.stream()
+                .map(
+                        c -> {
+                            CartDTO cartDTO = modelMapper.map(c, CartDTO.class);
+                            List<CartItemDTO> cartItemDTOs= c.getCartItems().stream()
+                                    .map(item -> { 
+                                        ProductDTO pDto = modelMapper.map(item.getProduct(), ProductDTO.class);
+                                        return new CartItemDTO(item.getCartItemId(), pDto, item.getQuantity(), item.getDiscount(), item.getProductPrice(), item.getProductPrice() + item.getQuantity());
+                                    })
+                                    .collect(Collectors.toList());
+                            cartDTO.setCartItems(cartItemDTOs);
+                            return cartDTO;
+                        })
+                .collect(Collectors.toList());
+
+        return cartDTOs;
     }
 
-    double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+    @Override
+    public CartDTO getCartByEmail(String email) {
+        Optional<Cart> cart_Optional = cartRepository.findCartByUserEmail(email);
 
-    product.setQuantity(product.getQuantity() + cartItem.getQuantity() - quantity);
+        if (cart_Optional.isEmpty()) {
+            throw new ResourceNotFoundException("Cart", "email", email);
+        }
 
-    cartItem.setQuantity(quantity);
-    cartItem.setProductPrice(product.getSpecialPrice());
-    cartItem.setDiscount(product.getDiscount());
+        Cart cart = cart_Optional.get();
 
-    cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * cartItem.getQuantity()));
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+        List<CartItemDTO> cartItemDTOs = cart.getCartItems().stream()
+                 .map(item -> { 
+                    ProductDTO pDto = modelMapper.map(item.getProduct(), ProductDTO.class);
+                    return new CartItemDTO(item.getCartItemId(), pDto, item.getQuantity(), item.getDiscount(), item.getProductPrice(), item.getProductPrice() + item.getQuantity());
+                 })
+                .collect(Collectors.toList());
 
-    cartItem = cartItemRepository.save(cartItem);
+        cartDTO.setCartItems(cartItemDTOs);
 
-    CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-    List<ProductDTO> productDTOs =
-        cart.getCartItems().stream()
-            .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class))
-            .collect(Collectors.toList());
-
-    cartDTO.setProducts(productDTOs);
-
-    return cartDTO;
-  }
-
-  @Recover
-  public CartDTO recoverUpdateCartItem(
-      Exception e, String userEmail, Long itemId, Integer quantity) {
-    log.error("Failed to update cart item {} after retries for user: {}", itemId, userEmail, e);
-    throw new APIException(
-        "Unable to update cart item. Inventory may have changed. Please refresh and try again.");
-  }
-
-  @Override
-  @Retryable(
-      retryFor = ObjectOptimisticLockingFailureException.class,
-      maxAttempts = 3,
-      backoff = @Backoff(delay = 1000, multiplier = 2))
-  @Transactional
-  public String deleteCartItem(String email, Long cartItemId) {
-    Cart cart =
-        cartRepository
-            .findCartByUserEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
-
-    CartItem cartItem =
-        cartItemRepository.findCartItemByProductIdAndCartId(cartItemId, cart.getCartId());
-
-    if (cartItem == null) {
-      throw new ResourceNotFoundException("Product", "productId", cartItemId);
+        return cartDTO;
     }
 
-    deleteCartItemFromCart(cart, cartItem);
-    return "Product" + cartItem.getProduct().getProductName() + " deleted from the cart";
-  }
+    @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
+    public CartDTO updateCartItem(String userEmail, Long itemId, Integer quantity) {
 
-  @Recover
-  public String recoverDeleteCartItem(Exception e, String email, Long cartItemId) {
-    log.error("Failed to delete cart item {} after retries for user: {}", cartItemId, email, e);
-    throw new APIException("Unable to remove item from cart. Please refresh and try again.");
-  }
+        Cart cart = cartRepository
+                .findCartByUserEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "user email", userEmail));
 
-  @Override
-  public Optional<Cart> findCartByEmail(String email) {
-    return cartRepository.findCartByUserEmail(email);
-  }
+        Product product = productService.getProductById(itemId);
 
-  @Override
-  public Optional<Cart> findByCartId(Long cartId) {
-    return cartRepository.findById(cartId);
-  }
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(itemId, cart.getCartId());
 
-  @Override
-  @Transactional
-  public String clearCart(String email) {
-    Optional<Cart> cartOpt = cartRepository.findCartByUserEmail(email);
+        if (cartItem == null) {
+            throw new APIException("Product" + product.getProductName() + " does not exist in the cart");
+        }
 
-    if (cartOpt.isEmpty()) {
-      throw new ResourceNotFoundException("Cart", "email", email);
+        int quantityDifference = quantity - cartItem.getQuantity();
+
+        if (quantityDifference > 0 && product.getQuantity() < quantityDifference) {
+            throw new APIException(
+                    "Cannot update cart. Only " + product.getQuantity() + " items available in stock.");
+        }
+
+        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+        product.setQuantity(product.getQuantity() + cartItem.getQuantity() - quantity);
+
+        cartItem.setQuantity(quantity);
+        cartItem.setProductPrice(product.getSpecialPrice());
+        cartItem.setDiscount(product.getDiscount());
+
+        cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * cartItem.getQuantity()));
+
+        cartItem = cartItemRepository.save(cartItem);
+
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+        List<CartItemDTO> cartItemDTOs = cart.getCartItems().stream()
+                 .map(item -> { 
+                    ProductDTO pDto = modelMapper.map(item.getProduct(), ProductDTO.class);
+                    return new CartItemDTO(item.getCartItemId(), pDto, item.getQuantity(), item.getDiscount(), item.getProductPrice(), item.getProductPrice() + item.getQuantity());
+                 })
+                .collect(Collectors.toList());
+
+        cartDTO.setCartItems(cartItemDTOs);
+
+        return cartDTO;
     }
 
-    Cart cart = cartOpt.get();
-
-    List<CartItem> items = new ArrayList<>(cart.getCartItems());
-
-    for (CartItem item : items) {
-      try {
-        deleteCartItemFromCart(cart, item);
-      } catch (Exception e) {
-        throw new APIException("Cart item could not be deleted");
-      }
+    @Recover
+    public CartDTO recoverUpdateCartItem(
+            Exception e, String userEmail, Long itemId, Integer quantity) {
+        log.error("Failed to update cart item {} after retries for user: {}", itemId, userEmail, e);
+        throw new APIException(
+                "Unable to update cart item. Inventory may have changed. Please refresh and try again.");
     }
 
-    return "Cart cleared successfully";
-  }
+    @Override
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @Transactional
+    public CartDTO deleteCartItem(String email, Long cartItemId) {
+        Cart cart = cartRepository
+                .findCartByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", email));
 
-  private void deleteCartItemFromCart(Cart cart, CartItem cartItem) {
-    double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+        CartItem cartItem = cartItemRepository.findByCartItemId(cartItemId);
 
-    Product product = cartItem.getProduct();
-    product.setQuantity(product.getQuantity() + cartItem.getQuantity());
+        if (!cartItem.getCart().getCartId().equals(cart.getCartId())) {
+            throw new APIException("Access Denied: Item does not belong to your cart!");
+        }
 
-    productService.save(product);
-    cart.setTotalPrice(cartPrice);
-    cartRepository.save(cart);
+        deleteCartItemFromCart(cart, cartItem);
 
-    cartItemRepository.deleteCartItemByProductIdAndCartId(
-        cartItem.getProduct().getProductId(), cart.getCartId());
-  }
+        return modelMapper.map(cart, CartDTO.class);
+    }
 
-  @Override
-  public CartDTO cartToDto(Cart cart) {
-    CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+    @Recover
+    public String recoverDeleteCartItem(Exception e, String email, Long cartItemId) {
+        log.error("Failed to delete cart item {} after retries for user: {}", cartItemId, email, e);
+        throw new APIException("Unable to remove item from cart. Please refresh and try again.");
+    }
 
-    return cartDTO;
-  }
+    @Override
+    public Optional<Cart> findCartByEmail(String email) {
+        return cartRepository.findCartByUserEmail(email);
+    }
+
+    @Override
+    public Optional<Cart> findByCartId(Long cartId) {
+        return cartRepository.findById(cartId);
+    }
+
+    @Override
+    @Transactional
+    public String clearCart(String email) {
+        Optional<Cart> cartOpt = cartRepository.findCartByUserEmail(email);
+
+        if (cartOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Cart", "email", email);
+        }
+
+        Cart cart = cartOpt.get();
+
+        List<CartItem> items = new ArrayList<>(cart.getCartItems());
+
+        for (CartItem item : items) {
+            try {
+                deleteCartItemFromCart(cart, item);
+            } catch (Exception e) {
+                throw new APIException("Cart item could not be deleted");
+            }
+        }
+
+        return "Cart cleared successfully";
+    }
+
+    private void deleteCartItemFromCart(Cart cart, CartItem cartItem) {
+
+        //orphan removal true -> hibarnate deletes the row for us
+        cart.getCartItems().remove(cartItem);
+
+        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+        Product product = cartItem.getProduct();
+        product.setQuantity(product.getQuantity() + cartItem.getQuantity());
+        productService.save(product);
+
+        cart.setTotalPrice(cartPrice);
+        cart.getCartItems().remove(cartItem);
+        cartRepository.save(cart);
+
+    }
+
+    @Override
+    public CartDTO cartToDto(Cart cart) {
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+
+        return cartDTO;
+    }
 }

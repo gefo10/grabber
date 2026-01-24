@@ -2,18 +2,20 @@ package com.grabbler.payloads.cart;
 
 import com.grabbler.payloads.product.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItemDTO {
 
-  private Long cartItemId;
-  private CartDTO cart;
-  private ProductDTO product;
-  private Integer quantity;
-  private double discount;
-  private double productPrice;
+    private Long cartItemId;
+    private ProductDTO product;
+    private Integer quantity;
+    private double discount;
+    private double productPrice;
+    private double subTotal; // productPrice * quantity
 }

@@ -1,18 +1,19 @@
 package com.grabbler.payloads.cart;
 
-import com.grabbler.payloads.product.ProductDTO;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartDTO {
 
-  private Long cartId;
-  private Double totalPrice = 0.0;
-  private List<ProductDTO> products = new ArrayList<>();
+    private Long cartId;
+    private Double totalPrice = 0.0;
+    private List<CartItemDTO> cartItems = new ArrayList<>();
 }

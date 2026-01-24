@@ -10,20 +10,20 @@ import org.springframework.data.domain.Page;
 @NoArgsConstructor
 public class PaginationMetadata {
 
-  private int page;
-  private int size;
-  private long totalElements;
-  private int totalPages;
-  private boolean first;
-  private boolean last;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private boolean first;
+    private boolean last;
 
-  public static PaginationMetadata from(Page<?> page) {
-    return new PaginationMetadata(
-        page.getNumber(),
-        page.getSize(),
-        page.getTotalElements(),
-        page.getTotalPages(),
-        page.isFirst(),
-        page.isLast());
-  }
+    public static PaginationMetadata from(Page<?> page) {
+        return new PaginationMetadata(
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast());
+    }
 }

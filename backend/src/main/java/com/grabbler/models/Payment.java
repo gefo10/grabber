@@ -13,34 +13,34 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "payments")
 @AllArgsConstructor
 @NoArgsConstructor
 public class Payment {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long transactionId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long transactionId;
 
-  @Enumerated(EnumType.STRING)
-  private PaymentMethod paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
-  @NotNull(message = "Payment token cannot be null")
-  private String paymentToken;
+    @NotNull(message = "Payment token cannot be null")
+    private String paymentToken;
 
-  @Enumerated(EnumType.STRING)
-  private PaymentStatus paymentStatus;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
-  @ToString.Exclude
-  @EqualsAndHashCode.Exclude
-  @OneToOne(
-      mappedBy = "payment",
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  private Order order;
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToOne(mappedBy = "payment", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    private Order order;
 }

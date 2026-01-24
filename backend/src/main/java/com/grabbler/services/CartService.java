@@ -6,21 +6,21 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CartService {
-  CartDTO addProductToUserCart(String email, Long productId, Integer quantity);
+    CartDTO addProductToUserCart(String email, Long productId, Integer quantity);
 
-  List<CartDTO> getAllCarts();
+    List<CartDTO> getAllCarts();
 
-  CartDTO getCartByEmail(String email);
+    CartDTO getCartByEmail(String email);
 
-  CartDTO updateCartItem(String userEmail, Long itemId, Integer quantity);
+    CartDTO updateCartItem(String userEmail, Long itemId, Integer quantity);
 
-  String deleteCartItem(String email, Long cartItemId);
+    CartDTO deleteCartItem(String email, Long cartItemId);
 
-  String clearCart(String email);
+    String clearCart(String email);
 
-  Optional<Cart> findCartByEmail(String email);
+    Optional<Cart> findCartByEmail(String email);
 
-  Optional<Cart> findByCartId(Long cartId);
+    Optional<Cart> findByCartId(Long cartId);
 
-  CartDTO cartToDto(Cart cart);
+    CartDTO cartToDto(Cart cart);
 }

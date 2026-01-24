@@ -8,32 +8,34 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "order_items")
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderItem {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long orderItemId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long orderItemId;
 
-  @ToString.Exclude
-  @EqualsAndHashCode.Exclude
-  @ManyToOne
-  @JoinColumn(name = "order_id")
-  private Order order;
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 
-  @ManyToOne
-  @JoinColumn(name = "product_id")
-  private Product product;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
-  private Integer quantity;
-  private double discount;
-  private double orderedProductPrice;
+    private Integer quantity;
+    private double discount;
+    private double orderedProductPrice;
 }
