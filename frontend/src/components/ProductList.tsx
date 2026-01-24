@@ -1,10 +1,17 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loadProducts } from '@/store/slices/productSlice';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Product } from '@/types';
 
 const ProductList: React.FC = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const { items, status, currentPage, totalElements, totalPages } = useAppSelector((state) => state.productResponse);
+    const { token } = useAppSelector((state) => state.auth)
+    const isAuthenticated = !!token;
 
     console.log("Current Page:" + currentPage);
     console.log("Total Pages:" + totalPages);
@@ -19,6 +26,15 @@ const ProductList: React.FC = () => {
         }
     }, [dispatch, status]);
 
+    const handleAddToCart = async (product: Product) => {
+        if (!isAuthenticated) {
+            navigate('/login', { state: { from: location } });
+            return;
+        }
+
+        //dispatch(addToCartAsync(
+
+    }
     if (status === 'loading') return <p>Loading products...</p>;
     if (status === 'failed') return <p>Error loading products...</p>;
     return (

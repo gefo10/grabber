@@ -67,6 +67,12 @@ export interface ProductResponse {
     last: boolean;
 }
 
+//request to add a product to the user's cart
+export interface AddProductToCartRequest {
+    productId: number,
+    quantity: number,
+}
+
 /*
     * UserDTO types
 */
@@ -98,6 +104,14 @@ export interface User {
 export interface Cart {
     cartId: number;
     totalPrice: number;
-    products: Product[];
+    items: CartItem[];
+}
+
+export interface CartItem {
+    cartItemId: number;
+    product: Product;
+    quantity: number;
+    discount: number;
+    subTotal: number;
 }
 

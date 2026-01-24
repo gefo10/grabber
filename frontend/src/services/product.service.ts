@@ -1,10 +1,13 @@
-import axios from 'axios';
-import { ProductResponse, ProductQueryParams} from '@/types/Product';
+import api from '@/utils/api';
+import { ProductResponse, ProductQueryParams } from '@/types';
 
-const API_URL = "http://localhost:8080/api/v1/products";
-export const fetchProducts = async (params?: ProductQueryParams): Promise<ProductResponse> => {
-    const response = await axios.get<ProductResponse>(API_URL, {
-        params: params
-    });
-    return response.data;
+const productService = {
+    fetchProducts: async (params?: ProductQueryParams): Promise<ProductResponse> => {
+        const response = await api.get('products', {
+            params: params,
+        });
+        return response.data;
+    },
 }
+
+export default productService;

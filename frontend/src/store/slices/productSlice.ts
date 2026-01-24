@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Product, ProductQueryParams, ProductResponse } from '@/types';
-import { fetchProducts } from '@/services/product.service';
+import productService from '@/services/product.service';
+
 
 interface ProductState {
     items: Product[];
@@ -21,7 +22,7 @@ const initialState: ProductState = {
 export const loadProducts = createAsyncThunk<ProductResponse, ProductQueryParams>(
     'products/load',
     async (params) => {
-        const response = fetchProducts(params);
+        const response = productService.fetchProducts(params);
         return response;
     }
 );
@@ -50,7 +51,7 @@ const productSlice = createSlice({
             })
             .addCase(loadProducts.rejected, (state) => {
                 state.status = 'failed';
-            });
+            })
     },
 });
 
